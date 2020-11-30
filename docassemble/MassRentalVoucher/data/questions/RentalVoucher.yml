@@ -1,5 +1,6 @@
 include:
   - docassemble.MAVirtualCourt:basic-questions.yml
+  - docassemble.income:financial_statement.yml
 ---
 comment: |
   The metadata section controls the tab title and saved interview title. You can delete this section if you include this YAML file in another YAML file.
@@ -46,37 +47,33 @@ code: |
   allowed_courts = interview_metadata["RentalVoucher"]["allowed courts"]
   nav.set_section('review_RentalVoucher')
   user_role = 'plaintiff'
-  users.target_number = 1
+  users.target_number = 8
   users.there_is_another = False
   users[0].name.first
-  users[0].address.unit
-  users[0].address.city
-  users[0].address.state
-  users[0].address.zip
+  users[0].address.address
   users[0].phone_number
-  users[0].email
-
   house_count
-  household1_name
-  household1_birthdate
-  if house_count >= 2:
-    household2_relationship
-  if house_count >= 3: 
-    household3_relationship
-  if house_count >= 4: 
-    household4_relationship
-  if house_count >= 5: 
-    household5_relationship
-  if house_count >= 6: 
-    household6_relationship
-  if house_count >= 7: 
-    household7_relationship
   set_progress(8.33)
+  users[1].name.first # head of household
+  household1_birthdate # head of household 
+  if house_count >= 2:
+    users[3].name.first and household2_relationship  
+  if house_count >= 3: 
+    users[4].name.first and household3_relationship
+  if house_count >= 4: 
+    users[5].name.first and household4_relationship
+  if house_count >= 5: 
+    users[6].name.first and household5_relationship
+  if house_count >= 6: 
+    users[7].name.first and household6_relationship
+  if house_count >= 7: 
+    users[8].name.first and household7_relationship
+  set_progress(16.67)
+  assets.gather()
+  assets.add_assets
   understand_english
-  #no_understand_english
   primary_spoken_language
   primary_written_language
-  set_progress(16.67)
   reside_application
   work_application
   child_school_application
@@ -85,35 +82,32 @@ code: |
   household1_employer
   set_progress(25.0)
   household1_gross
-  asset_1
-  financial_institution_1
+  real_estate.there_are_any
   if own_property == True:
     real_estate_address
+  set_progress(33.33)
   if sold_property:
     sold_property_assets_answer
   medical_expense
-  set_progress(33.33)
   if housing_assistance_previous:
     housing_assistance_agency
     housing_assistance_household_head
     housing_assistance_moveout
+  set_progress(41.67)
   sex_offender
   pending_criminal
   convicted_crime
   if sex_offender or pending_criminal or convicted_crime: 
     criminal_record_explanation
-  set_progress(41.67)
   if (without_home or immediate_threat) and not_contributed_to_situation and reasonable_efforts and (displaced_resdidence or displaced_current):
     homelessness_displacement
-  # Set the answer file name
-  emergency_contact
-  users[1].address.address # emergency contact address
-  users[1].mobile_number # emergency contact contact
-  set_parts(subtitle=str(users))
-  str(users[0])
-  users[0].address.address
   set_progress(50.0)
-
+  users[2].name.first # emergency contact name 
+  users[2].address.address # emergency contact address
+  users[2].mobile_number  # emergency contact contact
+  user_math_logic
+  #set_parts(subtitle=str(users))
+  #str(users[0])
   set_progress(58.33)
   signature_date
   # Save (anonymized) interview statistics.
@@ -153,52 +147,228 @@ validation code: |
   if house_count < 2 and house_count > 7:
     validation_error("This interview is set up to handle a maximum household size of 7 individuals")
 ---
+id: name of applicant
+question: |
+  Who is the name of the person filling out the application? 
+fields:
+  - First Name: users[0].name.first
+  - Middle Name: users[0].name.middle
+    required: False
+  - Last Name: users[0].name.last
+  - Suffix: users[0].name.suffix
+    code: |
+      name_suffix()
+    required: False
+---
 id: head of household name
 question: |
   What is your head of household's name? 
 fields:
-  - 'First and Last Name': household1_name
+  - First Name: users[1].name.first
+  - Middle Name: users[1].name.middl
+    required: False
+  - Last Name: users[1].name.last
+  - Suffix: users[1].name.suffix
+    code: |
+      name_suffix()
+    required: False  
 help: 
   label: What is a head of household? 
   heading: What is a head of household? 
   content: |
     Head of Household – the adult member of the family who is considered to be the head of household for purposes of determining income eligibility and rent. The head of household is responsible for ensuring that the family fulfills all of its responsibilities under MRVP. The family may designate any qualified family member as the head of household. The head of household must have the legal capacity to enter into a lease under state and local law. If the head of household is a student, he or she shall not be considered a full-time student pursuant to the definition above for purposes of calculating exclusions from household income under 760 CMR 49.05. 
-
 ---
-id: name of people in your household
+id: maths 1
+code: |
+  if house_count == 1:
+    users[3].name.first = ' '
+    users[3].name.middle = ' ' 
+    users[3].name.last = ' ' 
+    users[3].name.suffix = ' '
+    users[4].name.first = ' '
+    users[4].name.middle = ' ' 
+    users[4].name.last = ' ' 
+    users[4].name.suffix = ' '
+    users[5].name.first = ' '
+    users[5].name.middle = ' ' 
+    users[5].name.last = ' ' 
+    users[5].name.suffix = ' '
+    users[6].name.first = ' '
+    users[6].name.middle = ' ' 
+    users[6].name.last = ' ' 
+    users[6].name.suffix = ' '
+    users[7].name.first = ' '
+    users[7].name.middle = ' ' 
+    users[7].name.last = ' ' 
+    users[7].name.suffix = ' '
+    users[8].name.first = ' '
+    users[8].name.middle = ' ' 
+    users[8].name.last = ' ' 
+    users[8].name.suffix = ' '
+  if house_count == 2: 
+    users[4].name.first = ' '
+    users[4].name.middle = ' ' 
+    users[4].name.last = ' ' 
+    users[4].name.suffix = ' '
+    users[5].name.first = ' '
+    users[5].name.middle = ' ' 
+    users[5].name.last = ' ' 
+    users[5].name.suffix = ' '
+    users[6].name.first = ' '
+    users[6].name.middle = ' ' 
+    users[6].name.last = ' ' 
+    users[6].name.suffix = ' '
+    users[7].name.first = ' '
+    users[7].name.middle = ' ' 
+    users[7].name.last = ' ' 
+    users[7].name.suffix = ' '
+    users[8].name.first = ' '
+    users[8].name.middle = ' ' 
+    users[8].name.last = ' ' 
+    users[8].name.suffix = ' '
+  if house_count == 3: 
+    users[5].name.first = ' '
+    users[5].name.middle = ' ' 
+    users[5].name.last = ' ' 
+    users[5].name.suffix = ' '
+    users[6].name.first = ' '
+    users[6].name.middle = ' ' 
+    users[6].name.last = ' ' 
+    users[6].name.suffix = ' '
+    users[7].name.first = ' '
+    users[7].name.middle = ' ' 
+    users[7].name.last = ' ' 
+    users[7].name.suffix = ' '
+    users[8].name.first = ' '
+    users[8].name.middle = ' ' 
+    users[8].name.last = ' ' 
+    users[8].name.suffix = ' '
+  if house_count == 4: 
+    users[6].name.first = ' '
+    users[6].name.middle = ' ' 
+    users[6].name.last = ' ' 
+    users[6].name.suffix = ' '
+    users[7].name.first = ' '
+    users[7].name.middle = ' ' 
+    users[7].name.last = ' ' 
+    users[7].name.suffix = ' '
+    users[8].name.first = ' '
+    users[8].name.middle = ' ' 
+    users[8].name.last = ' ' 
+    users[8].name.suffix = ' '
+  if house_count == 5: 
+    users[6].name.first = ' '
+    users[6].name.middle = ' ' 
+    users[6].name.last = ' ' 
+    users[6].name.suffix = ' '
+    users[7].name.first = ' '
+    users[7].name.middle = ' ' 
+    users[7].name.last = ' ' 
+    users[7].name.suffix = ' '
+    users[8].name.first = ' '
+    users[8].name.middle = ' ' 
+    users[8].name.last = ' ' 
+    users[8].name.suffix = ' '
+  if house_count == 6: 
+    users[8].name.first = ' '
+    users[8].name.middle = ' ' 
+    users[8].name.last = ' ' 
+    users[8].name.suffix = ' '
+  user_math_logic = True 
+---
+id: person 2 
 question: |
-  What are the names of the other people in your household
+  What is the name of the next person in your house?
 subquestion: | 
-  You told us about ${ household1_name }. Tell us about the rest of the members of the household to live in unit. 
+  You already told us about ${ users[1].name.first }. 
 fields:
-  - 'First and Last Name': household2_name
-    show if: 
-      code: |
-        house_count >= 2
-  - 'First and Last Name': household3_name
-    show if: 
-      code: |
-        house_count >= 3
-  - 'First and Last Name': household4_name
-    show if: 
-      code: | 
-        house_count >= 4
-  - 'First and Last Name': household5_name
-    show if: 
-      code: |
-        house_count >= 5
-  - 'First and Last Name': household6_name
-    show if: 
-      code: |
-        house_count >= 6
-  - 'First and Last Name': household7_name
-    show if: 
-      code: |
-        house_count >= 7
+  - First Name: users[3].name.first
+  - Middle Name: users[3].name.middle
+    required: False
+  - Last Name: users[3].name.last
+  - Suffix: users[3].name.suffix
+    code: |
+      name_suffix()
+    required: False 
 ---
-id: head of household 
+id: person 3 
+question: |
+  What is the name of the next person in your house?
+subquestion: | 
+  You already told us about ${ users[1].name.first } and ${ users[3].name.first }
+fields:
+  - First Name: users[4].name.first
+  - Middle Name: users[4].name.middle
+    required: False
+  - Last Name: users[4].name.last
+  - Suffix: users[4].name.suffix
+    code: |
+      name_suffix()
+    required: False 
+---
+id: person 4 
+question: |
+  What is the name of the next person in your house?
+subquestion: | 
+  You already told us about ${ users[1].name.first }, ${ users[3].name.first } and ${ users[4].name.first }. 
+fields:
+  - First Name: users[5].name.first
+  - Middle Name: users[5].name.middle
+    required: False
+  - Last Name: users[5].name.last
+  - Suffix: users[5].name.suffix
+    code: |
+      name_suffix()
+    required: False  
+---
+id: person 5
+question: |
+  What is the name of the next person in your house?
+subquestion: |
+  You already told us about ${ users[1].name.first }, ${ users[3].name.first }, ${ users[4].name.first } and  ${ users[5].name.first }.
+fields:
+  - First Name: users[6].name.first
+  - Middle Name: users[6].name.middle
+    required: False
+  - Last Name: users[6].name.last
+  - Suffix: users[6].name.suffix
+    code: |
+      name_suffix()
+    required: False  
+---
+id: person 6
+question: |
+  What is the name of the next person in your house?
+subquestion: | 
+  You already told us about ${ users[1].name.first }, ${ users[3].name.first }, ${ users[4].name.first }  ${ users[5].name.first }, and  ${ users[6].name.first }. 
+fields:
+  - First Name: users[7].name.first
+  - Middle Name: users[7].name.middle
+    required: False
+  - Last Name: users[7].name.last
+  - Suffix: users[7].name.suffix
+    code: |
+      name_suffix()
+    required: False  
+---
+id: person 7
+question: |
+  What is the name of the next person in your house?
+subquestion: |
+  You already told us about ${ users[1].name.first }, ${ users[3].name.first }, ${ users[4].name.first }  ${ users[5].name.first },  ${ users[6].name.first }, and ${ users[7].name.first }. 
+fields:
+  - First Name: users[8].name.first
+  - Middle Name: users[8].name.middle
+    required: False
+  - Last Name: users[8].name.last
+  - Suffix: users[8].name.suffix
+    code: |
+      name_suffix()
+    required: False  
+---
+id: head of household info
 question: | 
-  Tell us about the head of house household, ${ household1_name }
+  Tell us about the head of house household, ${ users[1].name.first }
 fields:
   - 'Birthdate': household1_birthdate
     datatype: birthdate
@@ -240,13 +410,10 @@ fields:
 ---
 id: member 2 
 question: | 
-  Tell us about ${ household2_name }
+  Tell us about ${ users[3].name.first }
 fields:
   - 'Relationship to Head of Household': household2_relationship
-    choices: 
-      - Spouse: Spouse 
-      - Child: Child 
-      - Partner: Partner 
+    hint: e.g. Spouse, child, sibling
   - 'Birthdate': household2_birthdate
     datatype: birthdate
     maxlength: 14
@@ -287,13 +454,10 @@ fields:
 ---
 id: member 3
 question: | 
-  Tell us about ${ household3_name }
+  Tell us about ${ users[4].name.first }
 fields:
   - 'Relationship to Head of Household': household3_relationship
-    choices: 
-      - Spouse: Spouse 
-      - Child: Child 
-      - Partner: Partner 
+    hint: e.g. Spouse, child, sibling
   - 'Birthdate': household3_birthdate
     datatype: birthdate
     maxlength: 14
@@ -333,13 +497,10 @@ fields:
 ---
 id: member 4
 question: | 
-  Tell us about ${ household4_name }
+  Tell us about ${ users[5].name.first }
 fields:
   - 'Relationship to Head of Household': household4_relationship
-    choices: 
-      - Spouse: Spouse 
-      - Child: Child 
-      - Partner: Partner 
+    hint: e.g. Spouse, child, sibling 
   - 'Birthdate': household4_birthdate
     datatype: birthdate
     maxlength: 14
@@ -379,13 +540,10 @@ fields:
 ---
 id: member 5
 question: | 
-  Tell us about ${ household5_name }
+  Tell us about ${ users[6].name.first }
 fields:
   - 'Relationship to Head of Household': household5_relationship
-    choices: 
-      - Spouse: Spouse 
-      - Child: Child 
-      - Partner: Partner 
+    hint: e.g. Spouse, child, siblimg 
   - 'Birthdate': household5_birthdate
     datatype: birthdate
     maxlength: 14
@@ -425,13 +583,10 @@ fields:
 ---
 id: member 6
 question: | 
-  Tell us about ${ household6_name }
+  Tell us about ${ users[7].name.first }
 fields:
   - 'Relationship to Head of Household': household6_relationship
-    choices: 
-      - Spouse: Spouse 
-      - Child: Child 
-      - Partner: Partner 
+    hint: e.g. Spouse, child, sibling
   - 'Birthdate': household6_birthdate
     datatype: birthdate
     maxlength: 14
@@ -471,13 +626,10 @@ fields:
 ---
 id: member 7
 question: | 
-  Tell us about ${ household7_name }
+  Tell us about ${ users[8].name.first }
 fields:
   - 'Relationship to Head of Household': household7_relationship
-    choices: 
-      - Spouse: Spouse 
-      - Child: Child 
-      - Partner: Partner 
+    hint: e.g. Spouse, child, sibling 
   - 'Birthdate': household7_birthdate
     datatype: birthdate
     maxlength: 14
@@ -626,46 +778,53 @@ subquestion: |
   
   The housing agency may contact your emergency contact if they are unable to reach you in case of an emergency.
 fields:
-  - 'First and Last Name': emergency_contact
-    maxlength: 52
-  - 'Relationship to person': emergency_contact_relationship
+  - 'Your relationship to this person': emergency_contact_relationship
     maxlength: 70
+  - First Name: users[2].name.first
+  - Middle Name: users[2].name.middle
+    required: False
+  - Last Name: users[2].name.last
+  - Suffix: users[2].name.suffix
+    code: |
+      name_suffix()
+    required: False
+
 ---  
 id: emergency contact address
 question: |
-  What is ${ emergency_contact }'s address?
+  What is ${ users[2].name }'s address?
 subquestion: |
-  The housing agency will contact ${ emergency_contact} if they are unable to reach you in case of an emergency.
+  The housing agency will contact ${ users[2].name} if they are unable to reach you in case of an emergency.
 fields:
-  - Street address: users[1].address.address
+  - Street address: users[2].address.address
     address autocomplete: True
-  - Unit: users[1].address.unit
+  - Unit: users[2].address.unit
     required: False
-  - City: users[1].address.city
-  - State: users[1].address.state
+  - City: users[2].address.city
+  - State: users[2].address.state
     code: |
       states_list()
     default: MA      
-  - Zip: users[1].address.zip
+  - Zip: users[2].address.zip
     required: False
 ---
 id: emergency contact contact info 
 question: |
-  What is ${ emergency_contact}'s contact information?
+  What is ${ users[2].name.first }'s contact information?
 subquestion: |
-  The housing agency may contact ${ emergency_contact} if they are unable to reach you in case of an emergency.
+  The housing agency may contact ${ users[2].name} if they are unable to reach you in case of an emergency.
 fields:  
-  - Mobile number: users[1].mobile_number
+  - Mobile number: users[2].mobile_number 
     required: False
-  - Other phone number: users[1].phone_number
+  - Other phone number: users[2].phone_number
     required: False
-  - Email address: users[1].email    
+  - Email address: users[2].email    
     datatype: email
     required: False
 validation code: |
-  if (not showifdef('users[0].phone_number') and \
-      (not showifdef('users[0].mobile_number')) and \
-      (not showifdef('users[0].email'))):
+  if (not showifdef('users[2].phone_number') and \
+      (not showifdef('users[2].mobile_number')) and \
+      (not showifdef('users[2].email'))):
     validation_error(word("You need to provide at least one contact method."))
 help: |
   The court **must** be able to reach you. So you have to give them some way to do this.
@@ -675,7 +834,7 @@ help: |
 ---
 id: member 1 income before deduction
 question: |
-  Provide ${ household1_name }'s income before deduction
+  Provide ${ users[0].name.first }'s income before deduction
 subquestion: |
   Estimate the gross income anticipated for all household members from all sources for the next 12 months
 fields:
@@ -766,97 +925,69 @@ fields:
   - 'Total gross income': total_gross_income
     maxlength: 13
 ---
-id: assets 1 
+id: asset gather import
 question: |
-  Provide information about your assets 
+  Assets (accounts and things that you may own)
 subquestion: |
-  Include **all** bank accounts, stocks and bonds, trusts, real estate, etc. **Do not**  include clothing, furniture or cars. 
+  Do you, your spouse, or someone in your household own any of the following?
 fields:
-  - 'Household Member Name': household_with_asset_1
-    maxlength: 32
-  - 'Asset Type': asset_1
-    choices: 
-      - Bank account: Bank account
-      - Stocks and Bond: Stocks and Bond 
-      - Trusts: Trusts
-      - Real estate: Real estate
-      - Other: Other 
-    maxlength: 16
-  - 'Value of Asset': asset_value_1
-    maxlength: 12
-  - 'Name of Financial Institution ': financial_institution_1
-    maxlength: 38
-  - 'Account Number': account_number_1
-    maxlength: 42
+  - Real estate: real_estate.there_are_any
+    datatype: yesno
+  - Other assets: assets.asset_types
+    datatype: checkboxes
+    choices:
+      - Savings Account
+      - Checking Account
+      - Real estate
+      - IRA 
+      - Trust
+      - Mutual fund
+      - Stock
+      - Other: other   
+    exclude: |
+      ['real estate','vehicle']
 ---
-id: assets 2 
+#if: |
+#  not hasattr(assets[i],'type')
+id: assets
 question: |
-  Provide information about your assets 
+  Describe the ${ordinal(i) } asset owned by you and your household members.
 subquestion: |
-  Include **all** bank accounts, stocks and bonds, trusts, real estate, etc. **Do not**  include clothing, furniture or cars. 
+  Select more than one owner if both people own this exact asset. You'll be able to 
+  list more accounts for different members of your household later.
 fields:
-  - 'Household Member Name': household_with_asset_2
-    maxlength: 32
-  - 'Asset Type': asset_2
-    choices: 
-      - Bank account: Bank account
-      - Stocks and Bond: Stocks and Bond 
-      - Trusts: Trusts
-      - Real estate: Real estate
-      - Other: Other 
-    maxlength: 16
-  - 'Value of Asset': asset_value_2
-    maxlength: 12
-  - 'Name of Financial Institution ': financial_institution_2
-    maxlength: 38
-  - 'Account Number': account_number_2
-    maxlength: 42
----
-id: assets 3 
-question: |
-  Provide information about your assets 
-subquestion: |
-  Include **all** bank accounts, stocks and bonds, trusts, real estate, etc. **Do not**  include clothing, furniture or cars. 
-fields:
-  - 'Household Member Name': household_with_asset_3
-    maxlength: 32
-  - 'Asset Type': asset_3
-    choices: 
-      - Bank account: Bank account
-      - Stocks and Bond: Stocks and Bond 
-      - Trusts: Trusts
-      - Real estate: Real estate
-      - Other: Other 
-    maxlength: 16
-  - 'Value of Asset': asset_value_3
-    maxlength: 12
-  - 'Name of Financial Institution ': financial_institution_3
-    maxlength: 38
-  - 'Account Number': account_number_3
-    maxlength: 42
----
-id: assets 4 
-question: |
-  Provide information about your assets 
-subquestion: |
-  Include **all** bank accounts, stocks and bonds, trusts, real estate, etc. **Do not**  include clothing, furniture or cars. 
-fields:
-  - 'Household Member Name': household_with_asset_4
-    maxlength: 32
-  - 'Asset Type': asset_4
-    choices: 
-      - Bank account: Bank account
-      - Stocks and Bond: Stocks and Bond 
-      - Trusts: Trusts
-      - Real estate: Real estate
-      - Other: Other 
-    maxlength: 16
-  - 'Value of Asset': asset_value_4
-    maxlength: 12
-  - 'Name of Financial Institution ': financial_institution_4
-    maxlength: 38
-  - 'Account Number': account_number_4
-    maxlength: 42
+  - What type of asset is it?: assets[i].type
+    choices:
+      - Checking Account
+      - Savings Account
+      - Real estate
+      - IRA 
+      - Trust
+      - Mutual fund
+      - Stock
+      - Other: other
+      - None of the above     
+  - Explain what type of asset this is: assets[i].other_type
+    show if:
+      variable: assets[i].type
+      is: 'other'     
+  - Owner: assets[i].owner
+    datatype: object_radio
+    none of the above: False
+    choices:
+      - showifdef('users[1].name')
+      - showifdef('users[2].name')
+      - showifdef('users[3].name')
+      - showifdef('users[4].name')
+      - showifdef('users[5].name')
+      - showifdef('users[6].name')
+      - showifdef('users[7].name')
+  - Balance : assets[i].balance
+    datatype: currency
+    default: 0
+  - Interest or other Income: assets[i].value
+    datatype: currency
+    default: 0
 ---
 id: own prop
 question: |
@@ -1115,6 +1246,7 @@ attachment code: RentalVoucher_attachment['final']
 objects:
   - RentalVoucher_attachment: DADict
 ---
+id: attachment block
 attachment:
     variable name: RentalVoucher_attachment[i]
     name: Massachusetts Rental Voucher Program
@@ -1122,18 +1254,17 @@ attachment:
     skip undefined: True
     pdf template file: MRV.pdf
     fields: 
-      - "user1_name": ${ str(users[0]) }
-      - "user1_address_street": ${ users[0].address.address }
-      - "user1_address_street2": ${ users[0].address.unit }
-      - "user1_address_city": ${ users[0].address.city }
-      - "user1_address_state": ${ users[0].address.state }
-      - "user1_address_zip": ${ users[0].address.zip }
-      - "user1_phone": ${ users[0].phone_number }
-      - "user1_email": ${ users[0].email }
+      - "user0_name": ${ str(users[0]) }
+      - "user0_address_street": ${ users[0].address.address }
+      - "user0_address_street2": ${ users[0].address.unit }
+      - "user0_address_city": ${ users[0].address.city }
+      - "user0_address_state": ${ users[0].address.state }
+      - "user0_address_zip": ${ users[0].address.zip }
+      - "user0_phone_number": ${ users[0].phone_number }
+      - "user0_mobile": ${ users[0].mobile_number }
+      - "user0_email": ${ users[0].email }
       # If it is a signature, test which file version we're expecting. leave it empty unless it's the final attachment version
-      - "user1_signature": ${ users[0].signature if i == 'final' else '' }
-      - "signature_date": ${ signature_date }
-      - "user1_mobile": ${ user1_mobile_number }
+      
       - "household1_ethnic": ${ household1_ethnic }
       - "household1_race": |
           % if household1_race == 'Other': 
@@ -1141,11 +1272,16 @@ attachment:
           % else:
           ${ household1_race }
           % endif
-      - "household1_name__1": ${ household1_name }
+# head of household 
+      - "user1_name__1": ${ str(users[1]) }
       - "household1_birthdate": ${format_date(household1_birthdate, format='MM/dd/yyyy')  }
       - "household1_sex": ${ household1_sex }
       - "household1_ssn": ${ household1_ssn }
-      - "household2_name__1": ${ household2_name }
+# person 2 
+      - "user2_name__1": |
+          % if house_count >= 2:
+          ${ str(users[3]) }
+          % endif
       - "household2_birthdate": ${format_date(household2_birthdate, format='MM/dd/yyyy')  }
       - "household2_relationship": ${ household2_relationship }
       - "household2_ethnic": ${ household2_ethnic }
@@ -1157,7 +1293,11 @@ attachment:
           % else:
           ${ household2_race }
           % endif
-      - "household3_name__1": ${ household3_name }
+# person 3
+      - "user3_name__1": |
+          % if house_count >= 3:
+          ${ str(users[4]) }
+          % endif
       - "household3_birthdate": ${format_date(household3_birthdate, format='MM/dd/yyyy')  }
       - "household3_relationship": ${ household3_relationship }
       - "household3_ethnic": ${ household3_ethnic }
@@ -1169,7 +1309,11 @@ attachment:
           % else:
           ${ household3_race }
           % endif
-      - "household4_name__1": ${ household4_name }
+# person 4
+      - "user4_name__1": |
+          % if house_count >= 4:
+          ${ str(users[5]) }
+          % endif
       - "household4_ethnic": ${ household4_ethnic }
       - "household4_relationship": ${ household4_relationship }
       - "household4_race": |
@@ -1181,7 +1325,11 @@ attachment:
       - "household4_sex": ${ household4_sex }
       - "household4_ssn": ${ household4_ssn }
       - "household4_birthdate": ${format_date(household4_birthdate, format='MM/dd/yyyy')  }
-      - "household5_name__1": ${ household5_name }
+# person 5
+      - "user5_name__1": |
+          % if house_count >= 5:
+          ${ str(users[6]) }
+          % endif
       - "household5_ethnic": ${ household5_ethnic }
       - "household5_relationship": ${ household5_relationship }
       - "household5_race": |
@@ -1193,7 +1341,11 @@ attachment:
       - "household5_sex": ${ household5_sex }
       - "household5_ssn": ${ household5_ssn }
       - "household5_birthdate": ${format_date(household5_birthdate, format='MM/dd/yyyy')  }
-      - "household6_name__1": ${ household6_name }
+# person 6
+      - "user6_name__1": |
+          % if house_count >= 6:
+          ${ str(users[7]) }
+          % endif
       - "household6_ethnic": ${ household6_ethnic }
       - "household6_sex": ${ household6_sex }
       - "household6_relationship": ${ household6_relationship }
@@ -1205,7 +1357,11 @@ attachment:
           ${ household6_race }
           % endif
       - "household6_birthdate": ${format_date(household6_birthdate, format='MM/dd/yyyy')  }
-      - "household7_name__1": ${ household7_name }
+# person 7 
+      - "user7_name__1": |
+          % if house_count >= 7:
+          ${ str(users[8]) }
+          % endif
       - "household7_birthdate": ${format_date(household7_birthdate, format='MM/dd/yyyy')  }
       - "household7_sex": ${ household7_sex }
       - "household7_ssn": ${ household7_ssn }
@@ -1270,16 +1426,18 @@ attachment:
           ${ special_needs }
           % endif     
       - "special_needs_info": ${ special_needs_info }
-      - "emergency_contact": ${ emergency_contact }
-      - "emergency_contact_relationship": ${ emergency_contact_relationship }
+     
       - "users1_address": ${ users[1].address.address }
       - "users1_address2": ${ users[1].address.unit }
       - "users1_address_city": ${ users[1].address.city }
       - "users1_address_state": ${ users[1].address.state }
       - "users1_address_zip": ${ users[1].address.zip }
-      - "emergency_mobile": ${  users[1].mobile_number }
-      - "emergency_phone": ${ users[1].phone_number }
-      - "emergency_email": ${ users[1].email  }
+#emergency contact
+      - "emergency_contact": ${ str(users[2]) }
+      - "emergency_contact_relationship": ${ emergency_contact_relationship }
+      - "emergency_mobile": ${ users[2].mobile_number }
+      - "emergency_phone": ${ users[2].phone_number }
+      - "emergency_email": ${ users[2].email  }
       - "household1_gross": ${ household1_gross }
       - "household1_name__2": ${ household1_name }
       - "household1_employer": ${ household1_employer }
@@ -1311,24 +1469,24 @@ attachment:
       - "household10_name__2": ${ household10_name }
       - "household10_employer": ${ household10_employer }
       - "total_gross_income": ${ total_gross_income }
-      - "asset_1": ${ asset_1 }
+      - "asset_1": ${ assets.item(0) }
       - "asset_value_1": ${ asset_value_1 }
       - "financial_institution_1": ${ financial_institution_1 }
       - "account_number_1": ${ account_number_1 }
       - "asset_value_2": ${ asset_value_2 }
       - "household_with_asset_1": ${ household_with_asset_1 }
-      - "asset_2": ${ asset_2 }
+      - "asset_2": ${  assets.item(1) }
       - "account_number_2": ${ account_number_2 }
       - "financial_institution_2": ${ financial_institution_2 }
       - "household_with_asset_2": ${ household_with_asset_2 }
       - "asset_value_3": ${ asset_value_3 }
-      - "asset_3": ${ asset_3 }
+      - "asset_3": ${  assets.item(2) }
       - "account_number_3": ${ account_number_3 }
       - "financial_institution_3": ${ financial_institution_3 }
       - "household_with_asset_3": ${ household_with_asset_3 }
       - "account_number_4": ${ account_number_4 }
       - "household_with_asset_4": ${ household_with_asset_4 }
-      - "asset_value_4": ${ asset_value_4 }
+      - "asset_value_4": ${ assets.item(3) }
       - "financial_institution_4": ${ financial_institution_4 }
       - "asset_4": ${ asset_4 }
       - "own_property_yes": |
@@ -1403,3 +1561,5 @@ attachment:
           ${ sex_offender }
           % endif
       - "criminal_record_explination": ${ criminal_record_explination }
+      - "user0_signature": ${ users[0].signature if i == 'final' else '' }
+      - "signature_date": ${ signature_date }
