@@ -1,9 +1,13 @@
+---
+modules: 
+- .customincome
+---
 include:
   - docassemble.MAVirtualCourt:basic-questions.yml
   - docassemble.income:financial_statement.yml
 ---
-modules:
-  - .income
+objects: 
+  - cash: IncomeList.using(there_is_another=True,complete_attribute='type')
 ---
 comment: |
   The metadata section controls the tab title and saved interview title. You can delete this section if you include this YAML file in another YAML file.
@@ -80,15 +84,18 @@ code: |
   child_school_application
   if special_needs == True:
     special_needs_info
+  cash.gather()
+  if cash.there_are_any: 
+    review_cash
+  #if salary_wages: 
+  #  income.owner
   household1_employer
   set_progress(25.0)
   ### assets
+  assets.gather()
   assets.add_assets
   if assets.there_are_any:
     review_assets
-  assets.gather()
-  ## HOUSEHOLD INCOME NEEDS UPDATING 
-  household1_gross
   if own_property == True:
     real_estate_address
   set_progress(33.33)
@@ -131,43 +138,7 @@ code: |
   users[0].signature
   RentalVoucher = True
 ---
-generic object: Individual
-question: |
-   Other income
-subquestion: |
-  ${ users.incomes.table }
-  ${ users.incomes.add_action() }
-field: review_incomes
----
-question: |
-  Other income from your household members
-subquestion: |
-  ${ household.incomes.table }
-  ${ household.incomes.add_action() }
-field: users.review_incomes
----
-generic object: Individual
-question: |
-  income
-subquestion: |
-fields:
-  - receives money that is not from working: incomes.there_are_any
-    datatype: yesno
----
-generic object: Individual
-question: |
-   income
-subquestion: |  
-  What kinds of income does get? Include money that gets from any
-  source.
-fields:
-  - Money earned from a job or self-employment: jobs.there_are_any
-    datatype: yesno
-  - Money that isn't from a job: income_types
-    datatype: checkboxes
-    code: |
-      non_wage_income_list()  
----
+
 comment: |
   This question is used to introduce your interview. Please customize
 id: Massachusetts Rental Voucher Program
@@ -818,7 +789,6 @@ fields:
     code: |
       name_suffix()
     required: False
-
 ---  
 id: emergency contact address
 question: |
@@ -862,25 +832,95 @@ help: |
   Some forms allow you to tell the court you need to keep your address, phone,
   and email confidential, so that only court staff can see this information.    
 ---
-id: member 1 income before deduction
+id: income type checks 
 question: |
-  Provide ${ users[0].name.first }'s income before deduction
+  Do you, your spouse, or someone in your household own any of the following?
+subquestion: |
+  Include **all** bank accounts, stocks and bond, trusts, real estate, etc. **Do not** include clothing, furniture, or cars. 
+fields:
+  - no label: cash.cash_types 
+    datatype: checkboxes
+    code: |
+      cash_type_list() 
+---
+code: |
+  cash.there_are_any = cash.cash_types.any_true()
+---
+#code: |
+#  if cash.cash_types.any_true():
+#    for type in cash.cash_types.true_values():
+#      cash.appendObject(type=type)
+#  cash.add_cash = True
+---
+question: |
+  Income from you and your household members
+subquestion: |
+  So far you've told us about ${cash.number()} income(s).
+  You can add more or click continue to go to the next question.
+  ${ cash.table }
+  ${ cash.add_action() }
+field: review_cash
+---
+id: income table
+table: cash.table
+rows: cash
+columns:
+  - Owner: |
+      row_item.earner
+  - Type: |
+      cash_type_list()[row_item.type]
+  -  Gross 12 Months: |
+      currency(row_item.gross)
+  - Employer: |
+      row_item.source  
+---
+#id: ask income 
+#question: | 
+#  Check **all** types of income that **any member** recieves income from  the below
+#  
+#  
+#fields: 
+#  - no label: 
+#  - Salary, wages, including overtime and tips: salary_wages
+#    datatype: yesnowide
+#  - Income from Business or Profession: buisness_profession
+#    datatype: yesnowide
+#  - Unemployment or Disability Compensation: unemployment_disability
+#    datatype: yesnowide
+#  - TAFDC (Transitional Aid to Families with Dependent Children) or Public Assistance: tafdc_public_assistance
+#    datatype: yesnowide
+#  - Social Secuirty Benefits and SSI (Supplemental Secuirty Income), including SSP (State Supplement Program): social_security
+#    datatype: yesnowide
+#  - VA Disability Income: va_disability
+#    datatype: yesnowide
+#  - Pensions, Annuities, Dividends, and Interests: pensions_annuities
+#    datatype: yesnowide
+---
+id: income 
+question: |
+  Provide the income before deduction
 subquestion: |
   Estimate the gross income anticipated for all household members from all sources for the next 12 months
 fields:
-  - ' Name of Employer or Source of Income ': household1_employer
-    maxlength: 62
-  - ' Income Type': household1_incometype
-    choices: 
-      - Salary, wages, including overtime and tips: Salary, wages, including overtime and tips
-      - Net income from Business or Profession:Net income from Business or Profession: Net income from Business or Profession:Net income from Business or Profession
-      - Unemployment or Disability Compensation: Unemployment or Disability Compensation
-      - TAFDC (Transitional Aid to Families with Dependent Children) or Public Assistance: TAFDC (Transitional Aid to Families with Dependent Children) or Public Assistance
-      - Social Secuirty Benefits and SSI (Supplemental Secuirty Income), including SSP (State Supplement Program): Social Secuirty Benefits and SSI (Supplemental Secuirty Income), including SSP (State Supplement Program)
-      - VA Disability Income: VA Disability Income
-      - Pensions, Annuities, Dividends, and Interests: Pensions, Annuities, Dividends, and Interests
-  - 'Gross Income for the next 12 months': household1_gross
-    maxlength: 24
+    - 'Household member income': cash[i].earner
+      datatype: object_radio
+      choices:
+        - showifdef('users[1].name') 
+        - showifdef('users[3].name')
+        - showifdef('users[4].name')
+        - showifdef('users[5].name')
+        - showifdef('users[6].name')
+        - showifdef('users[7].name')
+        - showifdef('users[8].name')
+    - 'Income type': cash[i].type
+      code: |
+        cash_type_list() 
+    - 'Employer or Source of Income ': cash[i].source
+      maxlength: 62
+    - 'Gross Income for the next 12 months': cash[i].gross
+      datatype: currency
+      default: 0
+      maxlength: 24
 ---
 id: gross income
 question: |
