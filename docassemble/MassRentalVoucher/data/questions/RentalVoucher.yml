@@ -2,6 +2,9 @@ include:
   - docassemble.MAVirtualCourt:basic-questions.yml
   - docassemble.income:financial_statement.yml
 ---
+modules:
+  - .income
+---
 comment: |
   The metadata section controls the tab title and saved interview title. You can delete this section if you include this YAML file in another YAML file.
 metadata:
@@ -69,8 +72,6 @@ code: |
   if house_count >= 7: 
     users[8].name.first and household7_relationship
   set_progress(16.67)
-  assets.gather()
-  assets.add_assets
   understand_english
   primary_spoken_language
   primary_written_language
@@ -81,8 +82,13 @@ code: |
     special_needs_info
   household1_employer
   set_progress(25.0)
+  ### assets
+  assets.add_assets
+  if assets.there_are_any:
+    review_assets
+  assets.gather()
+  ## HOUSEHOLD INCOME NEEDS UPDATING 
   household1_gross
-  real_estate.there_are_any
   if own_property == True:
     real_estate_address
   set_progress(33.33)
@@ -92,7 +98,15 @@ code: |
   if housing_assistance_previous:
     housing_assistance_agency
     housing_assistance_household_head
-    housing_assistance_moveout
+    if moveout_date_unknown: 
+      housing_assistance_moveout_guess
+    moveout_reason
+    assitance_terminated
+    assitance_backrent
+  if assitance_terminated or assitance_backrent: 
+    assitance_backrent_explain
+  if owe_backrent or previous_evicted: 
+    explain_rental_history
   set_progress(41.67)
   sex_offender
   pending_criminal
@@ -116,6 +130,43 @@ code: |
   basic_questions_signature_flow
   users[0].signature
   RentalVoucher = True
+---
+generic object: Individual
+question: |
+   Other income
+subquestion: |
+  ${ users.incomes.table }
+  ${ users.incomes.add_action() }
+field: review_incomes
+---
+question: |
+  Other income from your household members
+subquestion: |
+  ${ household.incomes.table }
+  ${ household.incomes.add_action() }
+field: users.review_incomes
+---
+generic object: Individual
+question: |
+  income
+subquestion: |
+fields:
+  - receives money that is not from working: incomes.there_are_any
+    datatype: yesno
+---
+generic object: Individual
+question: |
+   income
+subquestion: |  
+  What kinds of income does get? Include money that gets from any
+  source.
+fields:
+  - Money earned from a job or self-employment: jobs.there_are_any
+    datatype: yesno
+  - Money that isn't from a job: income_types
+    datatype: checkboxes
+    code: |
+      non_wage_income_list()  
 ---
 comment: |
   This question is used to introduce your interview. Please customize
@@ -668,18 +719,6 @@ fields:
     required: False 
     maxlength: 10
 ---
-#id: race
-#question: |
-#  Provide the racial designation of each individual in your household 
-#subquestion: |
-#  Responding to this question is **optional**. Your status with respect to tenant selection procedures will NOT be affected by this information.
----
-#id: ethnic designation
-#question: |
-#  Provide the ethnic designation of each individual in your household 
-#subquestion: |
- #Responding to this question is **optional**. Your status with respect to tenant selection procedures will NOT be affected by this information.
----
 id: spoken and written language
 question: |
   Do you understand spoken or written English?
@@ -732,15 +771,6 @@ fields:
       - 'Public action such as urban renewal or eminent domain': displaced_public_action_1
       - 'Public action like condemnation of your home': displaced_public_action_2
 ---
-#    - 'No-fault of applicant': displaced_no_fault
-#    - 'Severe medical emergency': displaced_medical
-#    - 'Domestic violence': displaced_domestic_violence
-#    - 'Natural forces': displaced_natural_forces
-#    - 'Public action such as urban renewal or eminent domain': displaced_public_action_1
-#    - 'Public action like condemnation of your home': displaced_public_action_2
-#
-
----
 id: local pref 1 
 question: |
   Do you currently reside in the same city or town that the Local Housing Authority to which you are applying is located in
@@ -774,7 +804,7 @@ id: emergency contact
 question: |
   Provide an emergency contact
 subquestion: |
-  Name of a relative or friend **not planning to live with you.**  
+  Name of a relative or friend **not planning to live with you.** 
   
   The housing agency may contact your emergency contact if they are unable to reach you in case of an emergency.
 fields:
@@ -851,48 +881,6 @@ fields:
       - Pensions, Annuities, Dividends, and Interests: Pensions, Annuities, Dividends, and Interests
   - 'Gross Income for the next 12 months': household1_gross
     maxlength: 24
-
----
-#  - '${ household2_name } employer ': household2_employer
-#    show if: 
-#      code: |
-#        house_count >= 1
-#    maxlength: 62
-#  - '${ household3_name } employer ': household3_employer
-#    show if: 
-#      code: |
-#        house_count >= 2
-#    maxlength: 62
-#  - '${ household4_name } employer ': household4_employer
-#    show if: 
-#      code: |
-#        house_count >= 3
-#    maxlength: 62
-#  - '${ household5_name } employer ': household5_employer
-#      show if: 
-#      code: |
-#        house_count >= 4
-#    maxlength: 62
-#  - '${ household6_name } employer ': household6_employer
-#    show if: 
-#      code: |
-#        house_count >= 4
-#    maxlength: 62
-#  - '${ household7_name } employer ': household7_employer
-#    show if: 
-#      code: |
-#        house_count >= 6
-#    maxlength: 62
-#  - '${ household9_name } employer ': household9_employer
-#    show if: 
-#      code: |
-#        house_count >= 8
-#    maxlength: 62
-#  - '${ household10_name } employer': household10_employer
-#    show if: 
-#      code: |
-#        house_count >= 9
-#    maxlength: 62
 ---
 id: gross income
 question: |
@@ -927,46 +915,26 @@ fields:
 ---
 id: asset gather import
 question: |
-  Assets (accounts and things that you may own)
-subquestion: |
   Do you, your spouse, or someone in your household own any of the following?
+subquestion: |
+  Include **all** bank accounts, stocks and bond, trusts, real estate, etc. **Do not** include clothing, furniture, or cars. 
 fields:
-  - Real estate: real_estate.there_are_any
-    datatype: yesno
-  - Other assets: assets.asset_types
+  - no label: assets.asset_types 
     datatype: checkboxes
-    choices:
-      - Savings Account
-      - Checking Account
-      - Real estate
-      - IRA 
-      - Trust
-      - Mutual fund
-      - Stock
-      - Other: other   
+    code: |
+      asset_type_list()
     exclude: |
-      ['real estate','vehicle']
+      ['vehicle']
 ---
 #if: |
 #  not hasattr(assets[i],'type')
 id: assets
 question: |
   Describe the ${ordinal(i) } asset owned by you and your household members.
-subquestion: |
-  Select more than one owner if both people own this exact asset. You'll be able to 
-  list more accounts for different members of your household later.
 fields:
   - What type of asset is it?: assets[i].type
-    choices:
-      - Checking Account
-      - Savings Account
-      - Real estate
-      - IRA 
-      - Trust
-      - Mutual fund
-      - Stock
-      - Other: other
-      - None of the above     
+    code: |
+      asset_type_list()   
   - Explain what type of asset this is: assets[i].other_type
     show if:
       variable: assets[i].type
@@ -976,18 +944,46 @@ fields:
     none of the above: False
     choices:
       - showifdef('users[1].name')
-      - showifdef('users[2].name')
       - showifdef('users[3].name')
       - showifdef('users[4].name')
       - showifdef('users[5].name')
       - showifdef('users[6].name')
       - showifdef('users[7].name')
-  - Balance : assets[i].balance
+      - showifdef('users[8].name')
+  - Asset Value or Current Balance : assets[i].balance
     datatype: currency
     default: 0
-  - Interest or other Income: assets[i].value
-    datatype: currency
-    default: 0
+  - Name of Financial Institution: assets[i].institution
+    maxlength: 38
+  - Account Number: assets[i].account
+    maxlength: 42
+---
+id: review assets
+question: |
+  Assets from you and your household members
+subquestion: |
+  So far you've told us about ${assets.number()} asset(s).
+  You can add more or click continue to go to the next question.
+  ${ assets.table }
+  ${ assets.add_action() }
+field: review_assets
+---
+id: assets
+table: assets.table
+rows: assets
+columns:
+  - Owner: |
+      row_item.owner
+  - Type: |
+      asset_type_list()[row_item.type]
+  - Current balance: |
+      currency(row_item.balance)
+  - Financial Institution: |
+      row_item.institution
+  - Account Number: |
+      row_item.account     
+edit:
+  - balance
 ---
 id: own prop
 question: |
@@ -1062,7 +1058,7 @@ yesno: housing_assistance_previous
 ---
 id: previous agency
 question: |
-  What was the name of the housing agency you or household member recieved housing assistance from?
+  What was the name of the housing agency you or household member recieved housing assistance from in the past?
 fields: 
   - 'Agency name': housing_assistance_agency
     maxlength: 128
@@ -1071,49 +1067,51 @@ id: previous agency moveout
 question: |
   What date did you or the member of your household who recieved housing assitance in the past moveout? 
 fields: 
-  - 'I do not know the exact date': moveout_date_unkown
+  - 'I do not know the exact date': moveout_date_unknown
     datatype: yesno
   - 'Moveout date': housing_assistance_moveout
-    hide if: moveout_date_unkown
+    hide if: moveout_date_unknown
     datatype: date
     maxlength: 128
   - 'Moveout date guess': housing_assistance_moveout_guess
-    show if: moveout_date_unkown
+    show if: moveout_date_unknown
     maxlength: 128
+---
+id: reason moveout 
+question: |
+  Why did you or members of your household moved out of the household with the prior housing agency?
+fields:
+  - 'no label': moveout_reason
+    input type: area
+    rows: 2
+    maxlength: 128
+---
+id: terminated for cause 
+question: |
+  Were you or any member of your household receiving assistance at the housing agency terminated for cause? 
+yesno: assitance_terminated 
 --- 
+id: backrent 
+question: | 
+  Do you owe any money, back rent or damages to the housing agency? 
+yesno: assitance_backrent
+---
+id: explain termiated 
+question: |
+  You said you or a member of your household was terminated for cause and/or owes money, back rent or damages to the housing agency
+subquestion: |
+  Provide an explaination.
+fields: 
+  - 'no label': assitance_backrent_explain
+    input type: area
+    rows: 2
+    maxlength: 132
+---
 id: yes recieved previous assistance - hoh
 question: | 
   Name of the head of household at the time you recieved housing assitance from MRVP or any other housing agency in the past
 fields: 
   - 'First and Last Name': housing_assistance_household_head
-    maxlength: 128
----
-id: 
-question: |
-  other stuff
-fields: 
-  - 'Moveout reason': moveout_reason
-    maxlength: 128
-  - note: |
-     **Were you terminated for cause?**
-  - 'Yes': assitance_terminated_yes
-    datatype: yesnowide     
-  - 'No': assitance_terminated_no
-    datatype: yesnowide
-  - 'Assitance backrent': assitance_backrent_yes
-    datatype: yesnowo
-  - 'Assitance backrent': assitance_backrent_no
-    datatype: yesno
-  - 'Assitance backrent explain': assitance_backrent_explain
-    maxlength: 132
-  - 'Owe backrent': owe_backrent_yes
-    datatype: yesno
-  - 'Owe backrent': owe_backrent_no
-    datatype: yesno
-  - 'Previous evicted': previous_evicted_yes
-    datatype: yesno
-  - 'Previous evicted': previous_evicted_no
-    datatype: yesno
 ---
 id: criminal history
 question: |
@@ -1165,21 +1163,23 @@ fields:
     input type: area
     rows: 2
 ---
-id: missed fileds
+id: rental history 1
 question: |
-  missed fileds
-subquestion: |
-  Placeholder text
-fields:
-  - 'Household4 empoloyer': household4_empoloyer
-    maxlength: 62
-  - 'Household5 empoloyer': household5_empoloyer
-    maxlength: 62
-  - 'Household8 empoloyer': household8_empoloyer
-    maxlength: 62
-  - 'Household with asset 2': household_with_asset_2
-    maxlength: 32
+  Do you owe any previous property owner money for damagers or unpaid rent? 
+yesno: owe_backrent
+--- 
+id: rental history 2 
+question: | 
+  Have you ever been evicted from a rental unit for cause? 
+yesno: previous_evicted 
+---
+id: explain rental history
+question: | 
+  If you owe any previous property owner money for damagers or unpaid rent or were evicted from a rental unit for cause, explain below.
+fields: 
   - 'Explain rental history': explain_rental_history
+    input type: area
+    rows: 2
     maxlength: 152
 ---
 id: your address
@@ -1235,7 +1235,7 @@ id: Your form is ready to download and file
 question: |
   Your form is ready to download and file
 subquestion: |
-  Thank you ${users}. Your form is ready to download and deliver.
+  Thank you ${users[0].name}. Your form is ready to download and deliver.
   
   Below is a preview of your form.
   
@@ -1373,68 +1373,38 @@ attachment:
           % else:
           ${ household7_race }
           % endif
-      - "no_understand_english": |
-          % if understand_english == False:
-          ${ understand_english }
-          % endif
-      - "yes_understand_english": |
-          % if understand_english == True:
-          ${ understand_english }
-          % endif
+      - "no_understand_english": ${ not understand_english }
+      - "yes_understand_english": ${ understand_english }
       - "primary_spoken_language": ${ primary_spoken_language }
       - "primary_written_language": ${ primary_written_language }
       - "immediate_threat": ${ without_home or immediate_threat }
       - "not_contributed_to_situation": ${ not_contributed_to_situation }
       - "reasonable_efforts": ${ reasonable_efforts }
       - "displaced_resdidence": ${ displaced_resdidence }
-      - "displaced_no_fault": ${ displaced_no_fault }
-      - "displaced_medical": ${ displaced_medical }
-      - "displaced_domestic_violence": ${ displaced_domestic_violence }
-      - "displaced_natural_forces": ${ displaced_natural_forces }
-      - "displaced_public_action_1": ${ displaced_public_action_1 }
-      - "displaced_public_action_2": ${ displaced_public_action_2 }
-      - "reside_application_town_yes": |
-          % if reside_application == True: 
-          ${ reside_application }
-          % endif
-      - "reside_application_town_no": |
-          % if reside_application == False: 
-          ${ reside_application }
-          % endif
-      - "work_application_town_yes": |
-          % if work_application == True: 
-          ${ work_application }
-          % endif
-      - "work_application_town_no": |
-          % if work_application == False: 
-          ${ work_application }
-          % endif
-      - "child_school_application_town_yes": |
-          % if child_school_application == True: 
-          ${ child_school_application }
-          % endif
-      - "child_school_application_town_no": |
-          % if child_school_application == False: 
-          ${ child_school_application }
-          % endif
-      - "special_needs_yes": |
-          % if special_needs == True: 
-          ${ special_needs }
-          % endif
-      - "special_needs_no": |
-          % if special_needs == False: 
-          ${ special_needs }
-          % endif     
+      - "displaced_no_fault": ${ homelessness_displacement == 'displaced_no_fault' }
+      - "displaced_medical": ${ homelessness_displacement ==  'displaced_medical' }
+      - "displaced_domestic_violence": ${ 'displaced_domestic_violence' }
+      - "displaced_natural_forces": ${ homelessness_displacement == 'displaced_natural_forces' }
+      - "displaced_public_action_1": ${ homelessness_displacement == 'displaced_public_action_1' }
+      - "displaced_public_action_2": ${ homelessness_displacement == 'displaced_public_action_2' }
+      - "reside_application_town_yes": ${ reside_application }
+      - "reside_application_town_no": ${ not reside_application }
+      - "work_application_town_yes": ${ work_application }
+      - "work_application_town_no": ${ not work_application }
+      - "child_school_application_town_yes": ${ child_school_application }
+      - "child_school_application_town_no": ${ not child_school_application }
+      - "special_needs_yes": ${ special_needs }
+      - "special_needs_no": ${ not special_needs } 
       - "special_needs_info": ${ special_needs_info }
-     
-      - "users1_address": ${ users[1].address.address }
-      - "users1_address2": ${ users[1].address.unit }
-      - "users1_address_city": ${ users[1].address.city }
-      - "users1_address_state": ${ users[1].address.state }
-      - "users1_address_zip": ${ users[1].address.zip }
+
 #emergency contact
       - "emergency_contact": ${ str(users[2]) }
       - "emergency_contact_relationship": ${ emergency_contact_relationship }
+      - "user1_address_street": ${ users[2].address.address }
+      - "user1_address_street2": ${ users[2].address.unit }
+      - "user1_address_city": ${ users[2].address.city }
+      - "user1_address_state": ${ users[2].address.state }
+      - "user1_address_zip": ${ users[2].address.zip }
       - "emergency_mobile": ${ users[2].mobile_number }
       - "emergency_phone": ${ users[2].phone_number }
       - "emergency_email": ${ users[2].email  }
@@ -1469,44 +1439,32 @@ attachment:
       - "household10_name__2": ${ household10_name }
       - "household10_employer": ${ household10_employer }
       - "total_gross_income": ${ total_gross_income }
-      - "asset_1": ${ assets.item(0) }
-      - "asset_value_1": ${ asset_value_1 }
-      - "financial_institution_1": ${ financial_institution_1 }
-      - "account_number_1": ${ account_number_1 }
-      - "asset_value_2": ${ asset_value_2 }
-      - "household_with_asset_1": ${ household_with_asset_1 }
-      - "asset_2": ${  assets.item(1) }
-      - "account_number_2": ${ account_number_2 }
-      - "financial_institution_2": ${ financial_institution_2 }
-      - "household_with_asset_2": ${ household_with_asset_2 }
-      - "asset_value_3": ${ asset_value_3 }
-      - "asset_3": ${  assets.item(2) }
-      - "account_number_3": ${ account_number_3 }
-      - "financial_institution_3": ${ financial_institution_3 }
-      - "household_with_asset_3": ${ household_with_asset_3 }
-      - "account_number_4": ${ account_number_4 }
-      - "household_with_asset_4": ${ household_with_asset_4 }
-      - "asset_value_4": ${ assets.item(3) }
-      - "financial_institution_4": ${ financial_institution_4 }
-      - "asset_4": ${ asset_4 }
-      - "own_property_yes": |
-          % if own_property == True: 
-          ${ own_property }
-          % endif
-      - "own_property_no": |
-          % if own_property == False: 
-          ${ own_property }
-          % endif
+      - "asset_1": ${ assets.item(0).type }
+      - "asset_value_1": ${ assets.item(0).balance  }
+      - "financial_institution_1": ${ assets.item(0).institution }
+      - "account_number_1": ${ assets.item(0).account }
+      - "asset_value_2": ${ assets.item(1).balance  }
+      - "household_with_asset_1": ${ assets[0].owner }
+      - "asset_2": ${  assets.item(1).type }
+      - "account_number_2": ${ assets.item(1).account  }
+      - "financial_institution_2": ${ assets.item(1).institution }
+      - "household_with_asset_2": ${ assets[1].owner }
+      - "asset_value_3": ${ assets.item(2).balance  }
+      - "asset_3": ${  assets.item(2).type }
+      - "account_number_3": ${ assets.item(2).account  }
+      - "financial_institution_3": ${ assets.item(2).institution }
+      - "household_with_asset_3": ${ assets[2].owner }
+      - "account_number_4": ${ assets.item(3).account  }
+      - "household_with_asset_4": ${ assets[3].owner }
+      - "asset_value_4": ${ assets.item(3).balance }
+      - "financial_institution_4": ${ assets.item(3).institution }
+      - "asset_4": ${ assets.item(3).type }
+      - "own_property_yes": ${ own_property }
+      - "own_property_no": ${ not own_property }
       - "real_estate_address": ${ real_estate_address }
-      - "sold_property_assets_no": |
-          % if sold_property == False: 
-          ${ sold_property }
-          % endif
-      - "sold_property_assets_yes": |
-          % if sold_property == True: 
-          ${ sold_property }
-          % endif
-      - "sold_property_assets_answer": ${ sold_property_assets_answer }
+      - "sold_property_assets_no": ${ not sold_property }
+      - "sold_property_assets_yes": ${ sold_property }
+      - "sold_property_assets_answer": ${ format_date(sold_property_assets_answer, format='MM/dd/yyyy') }
       - "property_sale_amount": ${ property_sale_amount }
       - "property_value_amount": ${ property_value_amount }
       - "medical_expense": ${ medical_expense }
@@ -1514,52 +1472,36 @@ attachment:
       - "health_insurance": ${ health_insurance }
       - "other_home_expenses": ${ other_home_expenses }
       - "child_support": ${ child_support }
-      - "housing_assistance_yes": |
-          % if housing_assistance_previous == True: 
-          ${ housing_assistance_previous }
-          % endif
-      - "housing_assistance_no": | 
-          % if housing_assistance_previous == False: 
-          ${ housing_assistance_previous }
-          % endif
+      - "housing_assistance_yes": ${ housing_assistance_previous }
+      - "housing_assistance_no": ${ not housing_assistance_previous }
       - "housing_assistance_household_head": ${ housing_assistance_household_head }
       - "housing_assistance_agency": ${ housing_assistance_agency }
-      - "housing_assistance_moveout": ${ format_date(housing_assistance_moveout, format='MM/dd/yyy') or housing_assistance_moveout_guess }
+      - "housing_assistance_moveout": |
+          % if moveout_date_unknown: 
+          ${ housing_assistance_moveout_guess }
+          % else: 
+          ${ format_date(housing_assistance_moveout, format='MM/dd/yyy') }  
+          % endif
       - "moveout_reason": ${ moveout_reason }
-      - "assitance_backrent_yes": ${ assitance_backrent_yes }
-      - "assitance_backrent_no": ${ assitance_backrent_no }
-      - "assitance_terminated_no": ${ assitance_terminated_no }
-      - "assitance_terminated_yes": ${ assitance_terminated_yes }
+      - "assitance_backrent_yes": ${ assitance_backrent }
+      - "assitance_backrent_no": ${ not assitance_backrent }
+      - "assitance_terminated_no": ${ not assitance_terminated }
+      - "assitance_terminated_yes": ${ assitance_terminated }
       - "assitance_backrent_explain": ${ assitance_backrent_explain }
-      - "owe_backrent_yes": ${ owe_backrent_yes }
-      - "owe_backrent_no": ${ owe_backrent_no }
-      - "previous_evicted_yes": ${ previous_evicted_yes }
-      - "previous_evicted_no": ${ previous_evicted_no }
+      - "owe_backrent_yes": ${ owe_backrent }
+      - "owe_backrent_no": ${ not owe_backrent }
+      - "previous_evicted_yes": ${ previous_evicted }
+      - "previous_evicted_no": ${ not previous_evicted }
       - "explain_rental_history": ${ explain_rental_history }
-      - "convicted_yes": |
-          % if convicted_crime == True: 
-          ${ convicted_crime }
-          % endif
-      - "convicted_no": |
-          % if not convicted_crime == True: 
-          ${ convicted_crime }
-          % endif
-      - "pending_yes": |
-          % if pending_criminal == True: 
-          ${ pending_criminal }
-          % endif
-      - "pending_no": |
-          % if not pending_criminal == True: 
-          ${ pending_criminal }
-          % endif
-      - "sex_offender_yes": |
-          % if sex_offender == True: 
-          ${ sex_offender }
-          % endif
-      - "sex_offender_no": |
-          % if not sex_offender == True: 
-          ${ sex_offender }
-          % endif
+      - "convicted_yes": ${ convicted_crime }
+      - "convicted_no": ${ not convicted_crime }
+      - "pending_yes": ${ pending_criminal }
+      - "pending_no": ${ not pending_criminal }
+      - "sex_offender_yes": ${ sex_offender }
+      - "sex_offender_no": ${ not sex_offender }
       - "criminal_record_explination": ${ criminal_record_explination }
       - "user0_signature": ${ users[0].signature if i == 'final' else '' }
-      - "signature_date": ${ signature_date }
+      - "signature_date": ${ format_date(signature_date, format='MM/dd/yyyy') }
+
+
+      
