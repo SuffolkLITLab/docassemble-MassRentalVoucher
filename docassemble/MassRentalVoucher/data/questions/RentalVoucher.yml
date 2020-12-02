@@ -1248,15 +1248,18 @@ help: |
 ---
 progress: 100
 mandatory: True
-id: Your form is ready to download and file
+id: Your form is ready to download
 question: |
   Your form is ready to download and file
 subquestion: |
-  Thank you ${users[0].name}. Your form is ready to download and deliver.
+  Thank you ${users[0].name}. Your form is ready to download. Below is a preview of your form.
   
-  Below is a preview of your form.
+  Next steps:
   
+    Contact the local housing agency in the area in which you wish to reside to check the status of the agency’s waiting list, open or closed. Applications may be made where waiting lists are open. Not all agencies administer both the Mobile and Project Based programs. Please use the [Service Locator](https://hedfuel.azurewebsites.net/) to find the Local Housing Authority Closest to you.
+
   ${pdf_concatenate(RentalVoucher_attachment['final'], filename='RentalVoucher.pdf') }
+
 need: RentalVoucher
 attachment code: RentalVoucher_attachment['final']
 ---
