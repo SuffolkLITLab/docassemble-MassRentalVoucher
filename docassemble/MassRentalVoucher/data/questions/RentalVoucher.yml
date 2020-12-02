@@ -139,7 +139,6 @@ code: |
   users[0].signature
   RentalVoucher = True
 ---
-
 comment: |
   This question is used to introduce your interview. Please customize
 id: Massachusetts Rental Voucher Program
@@ -147,7 +146,62 @@ continue button field: RentalVoucher_intro
 question: |
   Massachusetts Rental Voucher Program
 subquestion: |
+  This interview will help you complete an application for the Massachusetts Rental Voucher Program. 
+  
   The Massachusetts Rental Voucher Program (MRVP), provides a permanent improvement in the lives of low-income families and individuals by offering rental subsidies to those eligible for the program.
+  
+  Contact the local housing agency in the area in which you wish to reside to check the status of the agency’s waiting list, open or closed. Applications may be made where waiting lists are open. Not all agencies administer both the Mobile and Project Based programs. Please use the [Service Locator](https://hedfuel.azurewebsites.net/) to find the Local Housing Authority Closest to you.
+---
+id: basic questions intro screen
+question: |
+  Massachusetts Rental Voucher Program: Mass Access Project
+subquestion: |
+
+  The MassAccess Project can help **Massachusetts residents** complete and download forms in 3 steps:
+  
+  Step 1. Answer questions that will fill in your form for you.  
+  Step 2. Preview the completed form.  
+  Step 3. Download and print the final form. You will need to deliver it
+  to the court on your own.
+
+  If you do not live in Massachusetts, you may be able to get help for your 
+  legal problem from [your local legal aid 
+  provider](https://www.lsc.gov/what-legal-aid/find-legal-aid).
+  
+  Tap the {green words} in any screen for a definition or more information.
+  
+  If you have questions about this form or the court process, 
+  call the Trial Court’s Emergency HelpLine:  
+  833-91-COURT (833-912-6878)  
+  Monday-Friday  
+  8:30am - 4:30pm
+
+  % if chat_partners_available().help:
+  Live help is currently available in this interview. Click the speech bubble
+  (:comment-alt:) in the navigation bar to connect to a live advocate for help.
+  % endif
+
+fields:
+  - To continue, you must accept the [terms of use](https://massaccess.suffolklitlab.org/privacy/): acknowledged_information_use
+    datatype: checkboxes
+    none of the above: False    
+    minlength: 1
+    choices:
+      - I accept the terms of use.
+    validation messages:
+      minlength: |
+        You cannot continue unless you agree to the terms of use.        
+continue button field: basic_questions_intro_screen
+terms:
+  green words: |
+    Green words are legal terms or a short way of referring to something that needs more explanation. The definition or explanation pops up when you tap the green words.
+right: |
+  % if user_has_saved_answers:
+  ${fa_icon("bell", color="primary", size="sm")}
+  Saved answers available! 
+  
+  ${action_button_html(url_action('load_answer'), icon="folder-open", label=word("View answers"), size="sm" )}
+  % endif  
 ---
 id: Review your form before you sign it
 continue button field: RentalVoucher_preview_question
@@ -160,12 +214,13 @@ subquestion: |
 ---
 id: household count
 question: | 
-  How many people are in your household?
+  How many people will live in the home?
 fields: 
   - People in household: house_count
     datatype: integer
     min: 1
     max: 7 
+    note: 
 validation code: |
   if house_count < 2 and house_count > 7:
     validation_error("This interview is set up to handle a maximum household size of 7 individuals")
@@ -188,7 +243,7 @@ question: |
   What is your head of household's name? 
 fields:
   - First Name: users[1].name.first
-  - Middle Name: users[1].name.middl
+  - Middle Name: users[1].name.middle
     required: False
   - Last Name: users[1].name.last
   - Suffix: users[1].name.suffix
@@ -397,10 +452,6 @@ fields:
     datatype: birthdate
     maxlength: 14
   - 'Sex': household1_sex
-    choices: 
-      - Male: Male
-      - Female: Female
-      - Prefer not to say: Prefer not to say
     maxlength: 7
   - 'Social Security Number': household1_ssn
     hint: e.g. 123-45-6789
@@ -410,10 +461,12 @@ fields:
     help: |
       Responding to this question is **optional**. Your status with respect to tenant selection procedures will not be affected by this information.
     choices: 
-      - American Indian or Alaska Native: American Indian or Alaska Native
+      - American Indian: American Indian  
+      - Alaska Native: Alaska Native
       - Asian: Asian
       - Black or African American: Black or African American
-      - Native Hawaiian or Other Pacific Islander: Native Hawaiian Other Pacific Islander
+      - Native Hawaiian : Native Hawaiian
+      - Other Pacific Islander: Native Hawaiian Other Pacific Islander
       - White: White
       - Other (specify): Other
     required: False
@@ -441,10 +494,6 @@ fields:
     datatype: birthdate
     maxlength: 14
   - 'Sex': household2_sex
-    choices: 
-      - Male: Male
-      - Female: Female
-      - Prefer not to say: Prefer not to say
     maxlength: 7
   - 'Social Security Number': household2_ssn
     hint: e.g. 123-45-6789
@@ -454,10 +503,12 @@ fields:
     help: |
       Responding to this question is **optional**. Your status with respect to tenant selection procedures will not be affected by this information.
     choices: 
-      - American Indian or Alaska Native: American Indian or Alaska Native
+      - American Indian: American Indian  
+      - Alaska Native: Alaska Native
       - Asian: Asian
       - Black or African American: Black or African American
-      - Native Hawaiian or Other Pacific Islander: Native Hawaiian Other Pacific Islander
+      - Native Hawaiian : Native Hawaiian
+      - Other Pacific Islander: Native Hawaiian Other Pacific Islander
       - White: White
       - Other (specify): Other
     required: False
@@ -485,10 +536,6 @@ fields:
     datatype: birthdate
     maxlength: 14
   - 'Sex': household3_sex
-    choices: 
-      - Male: Male
-      - Female: Female
-      - Prefer not to say: Prefer not to say
     maxlength: 7
   - 'Social Security Number': household3_ssn
     hint: e.g. 123-45-6789
@@ -498,10 +545,12 @@ fields:
     help: |
       Responding to this question is **optional**. Your status with respect to tenant selection procedures will not be affected by this information.
     choices: 
-      - American Indian or Alaska Native: American Indian or Alaska Native
+      - American Indian: American Indian  
+      - Alaska Native: Alaska Native
       - Asian: Asian
       - Black or African American: Black or African American
-      - Native Hawaiian or Other Pacific Islander: Native Hawaiian Other Pacific Islander
+      - Native Hawaiian : Native Hawaiian
+      - Other Pacific Islander: Native Hawaiian Other Pacific Islander
       - White: White
       - Other (specify): Other
     required: False
@@ -528,10 +577,6 @@ fields:
     datatype: birthdate
     maxlength: 14
   - 'Sex': household4_sex
-    choices: 
-      - Male: Male
-      - Female: Female
-      - Prefer not to say: Prefer not to say
     maxlength: 7
   - 'Social Security Number': household4_ssn
     hint: e.g. 123-45-6789
@@ -541,10 +586,12 @@ fields:
     help: |
       Responding to this question is **optional**. Your status with respect to tenant selection procedures will NOT be affected by this information.
     choices: 
-      - American Indian or Alaska Native: American Indian or Alaska Native
+      - American Indian: American Indian  
+      - Alaska Native: Alaska Native
       - Asian: Asian
       - Black or African American: Black or African American
-      - Native Hawaiian or Other Pacific Islander: Native Hawaiian Other Pacific Islander
+      - Native Hawaiian : Native Hawaiian
+      - Other Pacific Islander: Native Hawaiian Other Pacific Islander
       - White: White
       - Other (specify): Other
     required: False
@@ -571,10 +618,6 @@ fields:
     datatype: birthdate
     maxlength: 14
   - 'Sex': household5_sex
-    choices: 
-      - Male: Male
-      - Female: Female
-      - Prefer not to say: Prefer not to say
     maxlength: 7
   - 'Social Security Number': household5_ssn
     hint: 123-45-6789
@@ -584,10 +627,12 @@ fields:
     help: |
       Responding to this question is **optional**. Your status with respect to tenant selection procedures will NOT be affected by this information.
     choices: 
-      - American Indian or Alaska Native: American Indian or Alaska Native
+      - American Indian: American Indian  
+      - Alaska Native: Alaska Native
       - Asian: Asian
       - Black or African American: Black or African American
-      - Native Hawaiian or Other Pacific Islander: Native Hawaiian Other Pacific Islander
+      - Native Hawaiian : Native Hawaiian
+      - Other Pacific Islander: Native Hawaiian Other Pacific Islander
       - White: White
       - Other (specify): Other
     required: False
@@ -614,10 +659,6 @@ fields:
     datatype: birthdate
     maxlength: 14
   - 'Sex': household6_sex
-    choices: 
-      - Male: Male
-      - Female: Female
-      - Prefer not to say: Prefer not to say
     maxlength: 7
   - 'Social Security Number': household6_ssn
     hint: 123-45-6789
@@ -627,10 +668,12 @@ fields:
     help: |
       Responding to this question is **optional**. Your status with respect to tenant selection procedures will NOT be affected by this information.
     choices: 
-      - American Indian or Alaska Native: American Indian or Alaska Native
+      - American Indian: American Indian  
+      - Alaska Native: Alaska Native
       - Asian: Asian
       - Black or African American: Black or African American
-      - Native Hawaiian or Other Pacific Islander: Native Hawaiian Other Pacific Islander
+      - Native Hawaiian : Native Hawaiian
+      - Other Pacific Islander: Native Hawaiian Other Pacific Islander
       - White: White
       - Other (specify): Other
     required: False
@@ -657,11 +700,6 @@ fields:
     datatype: birthdate
     maxlength: 14
   - 'Sex': household7_sex
-    choices: 
-      - Male: Male
-      - Female: Female
-      - Other: Other
-      - Prefer not to say: Prefer not to say 
     maxlength: 7
   - 'Social Security Number': household7_ssn
     hint: e.g. 123-45-6789
@@ -671,10 +709,12 @@ fields:
     help: |
       Responding to this question is **optional**. Your status with respect to tenant selection procedures will NOT be affected by this information.
     choices: 
-      - American Indian or Alaska Native: American Indian or Alaska Native
+      - American Indian: American Indian  
+      - Alaska Native: Alaska Native
       - Asian: Asian
       - Black or African American: Black or African American
-      - Native Hawaiian or Other Pacific Islander: Native Hawaiian Other Pacific Islander
+      - Native Hawaiian : Native Hawaiian
+      - Other Pacific Islander: Native Hawaiian Other Pacific Islander
       - White: White
       - Other (specify): Other
     required: False
@@ -746,17 +786,23 @@ fields:
 ---
 id: local pref 1 
 question: |
-  Do you currently reside in the same city or town that the Local Housing Authority to which you are applying is located in
+  Do you currently live in the same city or town that the Local Housing Authority you are applying is located in?
+subquestion: | 
+  You can use the [Service Locator](https://hedfuel.azurewebsites.net/) to find the Local Housing Authority Closest to you.
 yesno: reside_application
 ---
 id: local pref 2 
 question: |
-  Do you currently work in the same city or town that the Local Housing Authority to which you are applying is located in?
+  Do you currently work in the same city or town that the Local Housing Authority you are applying is located in?
+subquestion: | 
+  You can use the [Service Locator](https://hedfuel.azurewebsites.net/) to find the Local Housing Authority Closest to you.
 yesno: work_application
 ---
 id: local pref 3
 question: | 
-  Do you currently have a child who attends school in the same city or town that the Local Housing Authority to which you are applying is located in?
+  Do you currently have a child who attends school in the same city or town that the Local Housing Authority you are applying is located in?
+subquestion: | 
+  You can use the [Service Locator](https://hedfuel.azurewebsites.net/) to find the Local Housing Authority Closest to you.
 yesno: child_school_application
 ---
 id: special needs
@@ -827,16 +873,11 @@ validation code: |
   if (not showifdef('users[2].phone_number') and \
       (not showifdef('users[2].mobile_number')) and \
       (not showifdef('users[2].email'))):
-    validation_error(word("You need to provide at least one contact method."))
-help: |
-  The court **must** be able to reach you. So you have to give them some way to do this.
-  
-  Some forms allow you to tell the court you need to keep your address, phone,
-  and email confidential, so that only court staff can see this information.    
+    validation_error(word("You need to provide at least one contact method."))  
 ---
 id: income type checks 
 question: |
-  Do you, your spouse, or someone in your household own any of the following?
+  Does anyone in your household own any of the following?
 subquestion: |
   Include **all** bank accounts, stocks and bond, trusts, real estate, etc. **Do not** include clothing, furniture, or cars. 
 fields:
@@ -1170,10 +1211,10 @@ id: criminal record explanation
 question: | 
   You answered **yes** to at least one question regarding a criminal record for you or a member of your household. [BR] Provide an explination. 
 subquestion: | 
-  The questions were: [BR]
-  - Have you or any member of your household ever been convicted of a drug or violent crime?[BR]
-   - Do you or any member of your household have any criminal matters pending?[BR]
-   - Do you or any member of your household have a lifetime requirement to register as a sex offender in the state of Massachusetts?
+  The questions were:
+  * Have you or any member of your household ever been convicted of a drug or violent crime?
+  * Do you or any member of your household have any criminal matters pending?
+  * Do you or any member of your household have a lifetime requirement to register as a sex offender in the state of Massachusetts?
 fields: 
   - 'no label': criminal_record_explination
     maxlength: 154
