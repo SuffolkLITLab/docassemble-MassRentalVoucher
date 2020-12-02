@@ -1590,7 +1590,7 @@ attachment:
       - "criminal_record_explination": ${ criminal_record_explination }
       - "user0_signature": ${ users[0].signature if i == 'final' else '' }
       - "signature_date": ${ format_date(signature_date, format='MM/dd/yyyy') }
-      - "income1_type": | 
+      - "income1_type": |
           % if cash[0].type == 'Other': 
           ${ cash.item(0).other_type }
           % else: 
@@ -1603,7 +1603,7 @@ attachment:
           ${ cash.item(1).type }
           % endif 
       - "income3_type": |
-          % if cash20].type == 'Other': 
+          % if cash[2].type == 'Other': 
           ${ cash.item(2).other_type }
           % else: 
           ${ cash.item(2).type }
@@ -1644,12 +1644,13 @@ attachment:
           % else: 
           ${ cash.item(8).type }
           % endif 
-      - "income10_type": 
+      - "income10_type": |
           % if cash[9].type == 'Other': 
           ${ cash.item(9).other_type }
           % else: 
-          ${ ${ cash.item(9).type } }
+          ${ cash.item(9).type } 
           % endif
+
 
 
       
