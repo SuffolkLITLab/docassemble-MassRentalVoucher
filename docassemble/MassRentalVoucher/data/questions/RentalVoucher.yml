@@ -110,10 +110,8 @@ code: |
     if moveout_date_unknown: 
       housing_assistance_moveout_guess
     moveout_reason
-    assitance_terminated
-    assitance_backrent
-  if assitance_terminated or assitance_backrent: 
-    assitance_backrent_explain
+    if assitance_terminated or assitance_backrent: 
+      assitance_backrent_explain
   if owe_backrent or previous_evicted: 
     explain_rental_history
   set_progress(41.67)
