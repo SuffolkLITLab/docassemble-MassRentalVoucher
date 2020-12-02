@@ -88,6 +88,7 @@ code: |
   child_school_application
   if special_needs == True:
     special_needs_info
+  medical_expense
   ### income 
   if cash.there_are_any: 
     review_cash
@@ -103,7 +104,6 @@ code: |
   set_progress(33.33)
   if sold_property:
     sold_property_assets_answer
-  medical_expense
   if housing_assistance_previous:
     housing_assistance_agency
     housing_assistance_household_head
@@ -223,7 +223,7 @@ fields:
     min: 1
     max: 7 
   - note: |
-      This interview is set to handle a maximum of 7 individuals 
+      This interview can handle a maximum of 7 people 
 validation code: |
   if house_count < 2 and house_count > 7:
     validation_error("This interview is set up to handle a maximum household size of 7 individuals")
@@ -270,6 +270,11 @@ question:
 fields: 
   - no label: same_person_question
     datatype: yesnoradio
+help: 
+  label: What is a head of household? 
+  heading: What is a head of household? 
+  content: |
+    Head of Household – the adult member of the family who is considered to be the head of household for purposes of determining income eligibility and rent. The head of household is responsible for ensuring that the family fulfills all of its responsibilities under MRVP. The family may designate any qualified family member as the head of household. The head of household must have the legal capacity to enter into a lease under state and local law. If the head of household is a student, he or she shall not be considered a full-time student pursuant to the definition above for purposes of calculating exclusions from household income under 760 CMR 49.05. 
 ---
 id: head of household = user 
 code: | 
@@ -502,8 +507,8 @@ fields:
     help: |
       Responding to this question is **optional**. Your status with respect to tenant selection procedures will not be affected by this information.
     choices: 
-      - Hispanic/Latino: Hispanic/Latino
-      - Not Hispanic/Latino: Not Hispanic/Latino
+      - Hispanic/Latino: Hispanic /Latino
+      - Not Hispanic/Latino: Not Hispanic /Latino
     required: False 
     maxlength: 10
 ---
@@ -544,7 +549,7 @@ fields:
     help: |
       Responding to this question is **optional**. Your status with respect to tenant selection procedures will not be affected by this information.
     choices: 
-      - Hispanic/Latino: Hispanic/Latino
+      - Hispanic/Latino: Hispanic /Latino
       - Not Hispanic/Latino: Not Hispanic/Latino
     required: False 
     maxlength: 10
@@ -585,7 +590,7 @@ fields:
     help: |
       Responding to this question is **optional**. Your status with respect to tenant selection procedures will not be affected by this information.
     choices: 
-      - Hispanic/Latino: Hispanic/Latino
+      - Hispanic/Latino: Hispanic /Latino
       - Not Hispanic/Latino: Not Hispanic/Latino
     required: False 
     maxlength: 10
@@ -626,7 +631,7 @@ fields:
     help: |
       Responding to this question is **optional**. Your status with respect to tenant selection procedures will not be affected by this information.
     choices: 
-      - Hispanic/Latino: Hispanic/Latino
+      - Hispanic/Latino: Hispanic /Latino
       - Not Hispanic/Latino: Not Hispanic/Latino
     required: False 
     maxlength: 10
@@ -667,7 +672,7 @@ fields:
     help: |
       Responding to this question is **optional**. Your status with respect to tenant selection procedures will not be affected by this information.
     choices: 
-      - Hispanic/Latino: Hispanic/Latino
+      - Hispanic/Latino: Hispanic /Latino
       - Not Hispanic/Latino: Not Hispanic/Latino
     required: False 
     maxlength: 10
@@ -708,7 +713,7 @@ fields:
     help: |
       Responding to this question is **optional**. Your status with respect to tenant selection procedures will not be affected by this information.
     choices: 
-      - Hispanic/Latino: Hispanic/Latino
+      - Hispanic/Latino: Hispanic /Latino
       - Not Hispanic/Latino: Not Hispanic/Latino
     required: False 
     maxlength: 10
@@ -749,7 +754,7 @@ fields:
     help: |
       Responding to this question is **optional**. Your status with respect to tenant selection procedures will not be affected by this information.
     choices: 
-      - Hispanic/Latino: Hispanic/Latino
+      - Hispanic/Latino: Hispanic /Latino
       - Not Hispanic/Latino: Not Hispanic/Latino
     required: False 
     maxlength: 10
@@ -1239,6 +1244,7 @@ question: |
   You answered **yes** to at least one question regarding a criminal record for you or a member of your household. [BR] Provide an explination. 
 subquestion: | 
   The questions were:
+  
   * Have you or any member of your household ever been convicted of a drug or violent crime?
   * Do you or any member of your household have any criminal matters pending?
   * Do you or any member of your household have a lifetime requirement to register as a sex offender in the state of Massachusetts?
@@ -1483,8 +1489,12 @@ attachment:
       - "child_school_application_town_no": ${ not child_school_application }
       - "special_needs_yes": ${ special_needs }
       - "special_needs_no": ${ not special_needs } 
-      - "special_needs_info": ${ special_needs_info }
-
+      - "special_needs_info": | 
+          % if not special_needs: 
+          ${ 'N/A' }
+          % else: 
+          ${ special_needs_info }
+          % endif
 #emergency contact
       - "emergency_contact": ${ str(users[2]) }
       - "emergency_contact_relationship": ${ emergency_contact_relationship }
@@ -1497,7 +1507,12 @@ attachment:
       - "emergency_phone": ${ users[2].phone_number }
       - "emergency_email": ${ users[2].email  }
       - "household1_gross": ${ cash.item(0).gross }
-      - "household1_employed": ${ cash[0].earner }
+      - "household1_employed": |
+          % if not cash.item(0): 
+          ${ 'No household income' }
+          % else: 
+          ${ cash[0].earner }
+          % endif 
       - "household1_employer": ${ cash.item(0).source }
       - "household2_gross": ${ cash.item(1).gross }
       - "household2_employed": ${ cash[1].earner }
@@ -1527,12 +1542,37 @@ attachment:
       - "household10_employed": ${ cash[9].earner }
       - "household10_employer": ${ cash.item(9).source }
       - "total_gross_income": ${ currency(total_gross_income) }
-      - "asset_1": ${ assets.item(0).type }
-      - "asset_value_1": ${ assets.item(0).balance  }
-      - "financial_institution_1": ${ assets.item(0).institution }
-      - "account_number_1": ${ assets.item(0).account }
+      - "asset_1": | 
+          % if not assets.item(0): 
+          ${ 'N/A' }
+          % else: 
+          ${ assets.item(0).type }
+          % endif 
+      - "asset_value_1": |
+          % if not assets.item(0): 
+          ${ 'N/A' }
+          % else: 
+          ${ assets.item(0).balance  }
+          % endif 
+      - "financial_institution_1": |
+          % if not assets.item(0): 
+          ${ 'N/A' }
+          % else: 
+          ${ assets.item(0).institution }
+          % endif 
+      - "account_number_1": |
+          % if not assets.item(0): 
+          ${ 'N/A' }
+          % else: 
+          ${ assets.item(0).account }
+          % endif 
       - "asset_value_2": ${ assets.item(1).balance  }
-      - "household_with_asset_1": ${ assets[0].owner }
+      - "household_with_asset_1": |
+          % if not assets.item(0): 
+          ${ 'N/A' }
+          % else: 
+          ${ assets[0].owner } 
+          % endif 
       - "asset_2": ${  assets.item(1).type }
       - "account_number_2": ${ assets.item(1).account  }
       - "financial_institution_2": ${ assets.item(1).institution }
@@ -1549,12 +1589,32 @@ attachment:
       - "asset_4": ${ assets.item(3).type }
       - "own_property_yes": ${ own_property }
       - "own_property_no": ${ not own_property }
-      - "real_estate_address": ${ real_estate_address }
+      - "real_estate_address": | 
+          % if not own_property: 
+          ${ 'N/A' }
+          % else: 
+          ${ real_estate_address }
+          % endif
       - "sold_property_assets_no": ${ not sold_property }
       - "sold_property_assets_yes": ${ sold_property }
-      - "sold_property_assets_answer": ${ format_date(sold_property_assets_answer, format='MM/dd/yyyy') }
-      - "property_sale_amount": ${ property_sale_amount }
-      - "property_value_amount": ${ property_value_amount }
+      - "sold_property_assets_answer": | 
+          % if not sold_property: 
+          ${ 'N/A' }
+          % else: 
+          ${ format_date(sold_property_assets_answer, format='MM/dd/yyyy') }
+          % endif
+      - "property_sale_amount": |
+          % if not sold_property: 
+          ${ 'N/A' }
+          % else: 
+          ${ property_sale_amount } 
+          % endif
+      - "property_value_amount": |
+          % if not sold_property: 
+          ${ 'N/A' }
+          % else: 
+          ${ property_value_amount }
+          % endif
       - "medical_expense": ${ medical_expense }
       - "child_care": ${ child_care }
       - "health_insurance": ${ health_insurance }
@@ -1562,32 +1622,64 @@ attachment:
       - "child_support": ${ child_support }
       - "housing_assistance_yes": ${ housing_assistance_previous }
       - "housing_assistance_no": ${ not housing_assistance_previous }
-      - "housing_assistance_household_head": ${ housing_assistance_household_head }
-      - "housing_assistance_agency": ${ housing_assistance_agency }
-      - "housing_assistance_moveout": |
-          % if moveout_date_unknown: 
+      - "housing_assistance_household_head": | 
+          % if not housing_assistance_previous: 
+          ${ 'N/A' } 
+          % else: 
+          ${ housing_assistance_household_head }
+          % endif 
+      - "housing_assistance_agency": |
+          % if not housing_assistance_previous: 
+          ${ 'N/A' } 
+          % else: 
+          ${ housing_assistance_agency }
+          % endif 
+      - "housing_assistance_moveout": | 
+          % if not housing_assistance_previous:
+          ${ 'N/A' }
+          % elif moveout_date_unknown: 
           ${ housing_assistance_moveout_guess }
           % else: 
           ${ format_date(housing_assistance_moveout, format='MM/dd/yyy') }  
           % endif
-      - "moveout_reason": ${ moveout_reason }
+      - "moveout_reason": | 
+          % if not housing_assistance_previous: 
+          ${ 'N/A' } 
+          % else: 
+          ${ moveout_reason }
+          % endif 
       - "assitance_backrent_yes": ${ assitance_backrent }
       - "assitance_backrent_no": ${ not assitance_backrent }
       - "assitance_terminated_no": ${ not assitance_terminated }
       - "assitance_terminated_yes": ${ assitance_terminated }
-      - "assitance_backrent_explain": ${ assitance_backrent_explain }
+      - "assitance_backrent_explain": |
+          % if not housing_assistance_previous: 
+          ${ 'N/A' } 
+          % else: 
+          ${ assitance_backrent_explain }
+          % endif 
       - "owe_backrent_yes": ${ owe_backrent }
       - "owe_backrent_no": ${ not owe_backrent }
       - "previous_evicted_yes": ${ previous_evicted }
       - "previous_evicted_no": ${ not previous_evicted }
-      - "explain_rental_history": ${ explain_rental_history }
+      - "explain_rental_history": | 
+          % if not housing_assistance_previous: 
+          ${ 'N/A' } 
+          % else: 
+          ${ explain_rental_history }
+          % endif 
       - "convicted_yes": ${ convicted_crime }
       - "convicted_no": ${ not convicted_crime }
       - "pending_yes": ${ pending_criminal }
       - "pending_no": ${ not pending_criminal }
       - "sex_offender_yes": ${ sex_offender }
       - "sex_offender_no": ${ not sex_offender }
-      - "criminal_record_explination": ${ criminal_record_explination }
+      - "criminal_record_explination": | 
+          % if not sex_offender and not pending_criminal and not convicted_crime : 
+          ${ 'N/A' } 
+          % else: 
+          ${ criminal_record_explination }
+          % endif 
       - "user0_signature": ${ users[0].signature if i == 'final' else '' }
       - "signature_date": ${ format_date(signature_date, format='MM/dd/yyyy') }
       - "income1_type": |
