@@ -1663,7 +1663,7 @@ attachment:
       - "previous_evicted_yes": ${ previous_evicted }
       - "previous_evicted_no": ${ not previous_evicted }
       - "explain_rental_history": | 
-          % if not housing_assistance_previous: 
+          % if not owe_backrent and not previous_evicted : 
           ${ 'N/A' } 
           % else: 
           ${ explain_rental_history }
