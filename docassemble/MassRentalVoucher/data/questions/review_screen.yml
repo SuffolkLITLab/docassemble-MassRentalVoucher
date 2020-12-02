@@ -1,0 +1,692 @@
+---
+id: RentalVoucher review screen
+event: review_RentalVoucher
+question: |
+  Placeholder Review Screen
+subquestion: |
+  Edit your answers below
+review: 
+  - Edit: user1_mobile
+    button: |
+      User1 mobile:
+      ${ user1_mobile }
+  - Edit: household1_ethnic
+    button: |
+      Household1 ethnic:
+      ${ household1_ethnic }
+  - Edit: household1_race
+    button: |
+      Household1 race:
+      ${ household1_race }
+  - Edit: household1_name
+    button: |
+      Household1 name  1:
+      ${ household1_name }
+  - Edit: household1_birthdate
+    button: |
+      Household1 birthdate:
+      ${ household1_birthdate }
+  - Edit: household1_sex
+    button: |
+      Household1 sex:
+      ${ household1_sex }
+  - Edit: household1_ssn
+    button: |
+      Household1 ssn:
+      ${ household1_ssn }
+  - Edit: household2_name
+    button: |
+      Household2 name  1:
+      ${ household2_name }
+  - Edit: household2_birthdate
+    button: |
+      Household2 birthdate:
+      ${ household2_birthdate }
+  - Edit: household2_relationship
+    button: |
+      Household2 relationship:
+      ${ household2_relationship }
+  - Edit: household2_ethnic
+    button: |
+      Household2 ethnic:
+      ${ household2_ethnic }
+  - Edit: household2_sex
+    button: |
+      Household2 sex:
+      ${ household2_sex }
+  - Edit: household2_ssn
+    button: |
+      Household2 ssn:
+      ${ household2_ssn }
+  - Edit: household2_race
+    button: |
+      Household2 race:
+      ${ household2_race }
+  - Edit: household3_name
+    button: |
+      Household3 name  1:
+      ${ household3_name }
+  - Edit: household3_birthdate
+    button: |
+      Household3 birthdate:
+      ${ household3_birthdate }
+  - Edit: household3_relationship
+    button: |
+      Household3 relationship:
+      ${ household3_relationship }
+  - Edit: household3_ethnic
+    button: |
+      Household3 ethnic:
+      ${ household3_ethnic }
+  - Edit: household3_sex
+    button: |
+      Household3 sex:
+      ${ household3_sex }
+  - Edit: household3_ssn
+    button: |
+      Household3 ssn:
+      ${ household3_ssn }
+  - Edit: household3_race
+    button: |
+      Household3 race:
+      ${ household3_race }
+  - Edit: household4_name
+    button: |
+      Household4 name  1:
+      ${ household4_name }
+  - Edit: household4_ethnic
+    button: |
+      Household4 ethnic:
+      ${ household4_ethnic }
+  - Edit: household4_relationship
+    button: |
+      Household4 relationship:
+      ${ household4_relationship }
+  - Edit: household4_race
+    button: |
+      Household4 race:
+      ${ household4_race }
+  - Edit: household4_sex
+    button: |
+      Household4 sex:
+      ${ household4_sex }
+  - Edit: household4_ssn
+    button: |
+      Household4 ssn:
+      ${ household4_ssn }
+  - Edit: household4_birthdate
+    button: |
+      Household4 birthdate:
+      ${ household4_birthdate }
+  - Edit: household5_name
+    button: |
+      Household5 name  1:
+      ${ household5_name }
+  - Edit: household5_ethnic
+    button: |
+      Household5 ethnic:
+      ${ household5_ethnic }
+  - Edit: household5_relationship
+    button: |
+      Household5 relationship:
+      ${ household5_relationship }
+  - Edit: household5_race
+    button: |
+      Household5 race:
+      ${ household5_race }
+  - Edit: household5_sex
+    button: |
+      Household5 sex:
+      ${ household5_sex }
+  - Edit: household5_ssn
+    button: |
+      Household5 ssn:
+      ${ household5_ssn }
+  - Edit: household5_birthdate
+    button: |
+      Household5 birthdate:
+      ${ household5_birthdate }
+  - Edit: household6_name
+    button: |
+      Household6 name  1:
+      ${ household6_name }
+  - Edit: household6_ethnic
+    button: |
+      Household6 ethnic:
+      ${ household6_ethnic }
+  - Edit: household6_sex
+    button: |
+      Household6 sex:
+      ${ household6_sex }
+  - Edit: household6_relationship
+    button: |
+      Household6 relationship:
+      ${ household6_relationship }
+  - Edit: household6_ssn
+    button: |
+      Household6 ssn:
+      ${ household6_ssn }
+  - Edit: household6_race
+    button: |
+      Household6 race:
+      ${ household6_race }
+  - Edit: household6_birthdate
+    button: |
+      Household6 birthdate:
+      ${ household6_birthdate }
+  - Edit: household7_name
+    button: |
+      Household7 name  1:
+      ${ household7_name }
+  - Edit: household7_birthdate
+    button: |
+      Household7 birthdate:
+      ${ household7_birthdate }
+  - Edit: household7_sex
+    button: |
+      Household7 sex:
+      ${ household7_sex }
+  - Edit: household7_ssn
+    button: |
+      Household7 ssn:
+      ${ household7_ssn }
+  - Edit: household7_relationship
+    button: |
+      Household7 relationship:
+      ${ household7_relationship }
+  - Edit: household7_ethnic
+    button: |
+      Household7 ethnic:
+      ${ household7_ethnic }
+  - Edit: household7_race
+    button: |
+      Household7 race:
+      ${ household7_race }
+  - Edit: no_understand_english
+    button: |
+      No understand english:
+      ${ word(yesno(no_understand_english)) }
+  - Edit: yes_understand_english
+    button: |
+      Yes understand english:
+      ${ word(yesno(yes_understand_english)) }
+  - Edit: primary_spoken_language
+    button: |
+      Primary spoken language:
+      ${ primary_spoken_language }
+  - Edit: primary_written_language
+    button: |
+      Primary written language:
+      ${ primary_written_language }
+  - Edit: immediate_threat
+    button: |
+      Immediate threat:
+      ${ word(yesno(immediate_threat)) }
+  - Edit: not_contributed_to_situation
+    button: |
+      Not contributed to situation:
+      ${ word(yesno(not_contributed_to_situation)) }
+  - Edit: reasonable_efforts
+    button: |
+      Reasonable efforts:
+      ${ word(yesno(reasonable_efforts)) }
+  - Edit: displaced_resdidence
+    button: |
+      Displaced resdidence:
+      ${ word(yesno(displaced_resdidence)) }
+  - Edit: displaced_no_fault
+    button: |
+      Displaced no fault:
+      ${ word(yesno(displaced_no_fault)) }
+  - Edit: displaced_medical
+    button: |
+      Displaced medical:
+      ${ word(yesno(displaced_medical)) }
+  - Edit: displaced_domestic_violence
+    button: |
+      Displaced domestic violence:
+      ${ word(yesno(displaced_domestic_violence)) }
+  - Edit: displaced_natural_forces
+    button: |
+      Displaced natural forces:
+      ${ word(yesno(displaced_natural_forces)) }
+  - Edit: displaced_public_action_1
+    button: |
+      Displaced public action 1:
+      ${ word(yesno(displaced_public_action_1)) }
+  - Edit: displaced_public_action_2
+    button: |
+      Displaced public action 2:
+      ${ word(yesno(displaced_public_action_2)) }
+  - Edit: reside_application_town_yes
+    button: |
+      Reside application town:
+      ${ word(yesno(reside_application_town_yes)) }
+  - Edit: reside_application_town_no
+    button: |
+      Reside application town:
+      ${ word(yesno(reside_application_town_no)) }
+  - Edit: work_application_town_yes
+    button: |
+      Work application town:
+      ${ word(yesno(work_application_town_yes)) }
+  - Edit: work_application_town_no
+    button: |
+      Work application town:
+      ${ word(yesno(work_application_town_no)) }
+  - Edit: child_school_application_town_yes
+    button: |
+      Child school application town:
+      ${ word(yesno(child_school_application_town_yes)) }
+  - Edit: child_school_application_town_no
+    button: |
+      Child school application town:
+      ${ word(yesno(child_school_application_town_no)) }
+  - Edit: special_needs_yes
+    button: |
+      Special needs:
+      ${ word(yesno(special_needs_yes)) }
+  - Edit: special_needs_no
+    button: |
+      Special needs:
+      ${ word(yesno(special_needs_no)) }
+  - Edit: special_needs_info
+    button: |
+      Special needs info:
+      ${ special_needs_info }
+  - Edit: emergency_contact
+    button: |
+      Emergency contact:
+      ${ emergency_contact }
+  - Edit: emergency_contact_relationship
+    button: |
+      Emergency contact relationship:
+      ${ emergency_contact_relationship }
+  - Edit: emergency_address
+    button: |
+      Emergency address:
+      ${ emergency_address }
+  - Edit: emergency_address2
+    button: |
+      Emergency address2:
+      ${ emergency_address2 }
+  - Edit: emergency_address_city
+    button: |
+      Emergency address city:
+      ${ emergency_address_city }
+  - Edit: emergency_address_state
+    button: |
+      Emergency address state:
+      ${ emergency_address_state }
+  - Edit: emergency_address_zip
+    button: |
+      Emergency address zip:
+      ${ emergency_address_zip }
+  - Edit: emergency_mobile
+    button: |
+      Emergency mobile:
+      ${ emergency_mobile }
+  - Edit: emergency_phone
+    button: |
+      Emergency phone:
+      ${ emergency_phone }
+  - Edit: emergency_email
+    button: |
+      Emergency email:
+      ${ emergency_email }
+  - Edit: household1_gross
+    button: |
+      Gross income 1:
+      ${ household1_gross }
+  - Edit: household1_employer
+    button: |
+      Household1 employer:
+      ${ household1_employer }
+  - Edit: household2_gross
+    button: |
+      Household2 gross:
+      ${ household2_gross }
+  - Edit: household2_employer
+    button: |
+      Household2 employer:
+      ${ household2_employer }
+  - Edit: household3_gross
+    button: |
+      Household3 gross:
+      ${ household3_gross }
+  - Edit: household3_employer
+    button: |
+      Household3 employer:
+      ${ household3_employer }
+  - Edit: household4_gross
+    button: |
+      Household4 gross:
+      ${ household4_gross }
+  - Edit: household4_empoloyer
+    button: |
+      Household4 empoloyer:
+      ${ household4_empoloyer }
+  - Edit: household5_gross
+    button: |
+      Household5 gross:
+      ${ household5_gross }
+  - Edit: household5_empoloyer
+    button: |
+      Household5 empoloyer:
+      ${ household5_empoloyer }
+  - Edit: household6_gross
+    button: |
+      Household6 gross:
+      ${ household6_gross }
+  - Edit: household6_employer
+    button: |
+      Household6 employer:
+      ${ household6_employer }
+  - Edit: household7_gross
+    button: |
+      Household7 gross:
+      ${ household7_gross }
+  - Edit: household7_employer
+    button: |
+      Household7 employer:
+      ${ household7_employer }
+  - Edit: household8_gross
+    button: |
+      Household8 gross:
+      ${ household8_gross }
+  - Edit: household8_name
+    button: |
+      Household8 name  2:
+      ${ household8_name }
+  - Edit: household8_empoloyer
+    button: |
+      Household8 empoloyer:
+      ${ household8_empoloyer }
+  - Edit: household9_gross
+    button: |
+      Household9 gross:
+      ${ household9_gross }
+  - Edit: household9_name
+    button: |
+      Household9 name  2:
+      ${ household9_name }
+  - Edit: household9_employer
+    button: |
+      Household9 employer:
+      ${ household9_employer }
+  - Edit: household10_gross
+    button: |
+      Household10 gross:
+      ${ household10_gross }
+  - Edit: household10_name
+    button: |
+      Household10 name  2:
+      ${ household10_name }
+  - Edit: household10_employer
+    button: |
+      Household10 employer:
+      ${ household10_employer }
+  - Edit: total_gross_income
+    button: |
+      Total gross income:
+      ${ total_gross_income }
+  - Edit: asset_1
+    button: |
+      Asset 1:
+      ${ asset_1 }
+  - Edit: asset_value_1
+    button: |
+      Asset value 1:
+      ${ asset_value_1 }
+  - Edit: financial_institution_1
+    button: |
+      Financial institution 1:
+      ${ financial_institution_1 }
+  - Edit: account_number_1
+    button: |
+      Account number 1:
+      ${ account_number_1 }
+  - Edit: asset_value_2
+    button: |
+      Asset value 2:
+      ${ asset_value_2 }
+  - Edit: household_with_asset_1
+    button: |
+      Household with asset 1:
+      ${ household_with_asset_1 }
+  - Edit: asset_2
+    button: |
+      Asset 2:
+      ${ asset_2 }
+  - Edit: account_number_2
+    button: |
+      Account number 2:
+      ${ account_number_2 }
+  - Edit: financial_institution_2
+    button: |
+      Financial institution 2:
+      ${ financial_institution_2 }
+  - Edit: household_with_asset_2
+    button: |
+      Household with asset 2:
+      ${ household_with_asset_2 }
+  - Edit: asset_value_3
+    button: |
+      Asset value 3:
+      ${ asset_value_3 }
+  - Edit: asset_3
+    button: |
+      Asset 3:
+      ${ asset_3 }
+  - Edit: account_number_3
+    button: |
+      Account number 3:
+      ${ account_number_3 }
+  - Edit: financial_institution_3
+    button: |
+      Financial institution 3:
+      ${ financial_institution_3 }
+  - Edit: household_with_asset_3
+    button: |
+      Household with asset 3:
+      ${ household_with_asset_3 }
+  - Edit: account_number_4
+    button: |
+      Account number 4:
+      ${ account_number_4 }
+  - Edit: household_with_asset_4
+    button: |
+      Household with asset 4:
+      ${ household_with_asset_4 }
+  - Edit: asset_value_4
+    button: |
+      Asset value 4:
+      ${ asset_value_4 }
+  - Edit: financial_institution_4
+    button: |
+      Financial institution 4:
+      ${ financial_institution_4 }
+  - Edit: asset_4
+    button: |
+      Asset 4:
+      ${ asset_4 }
+  - Edit: own_property_yes
+    button: |
+      Own property:
+      ${ word(yesno(own_property_yes)) }
+  - Edit: own_property_no
+    button: |
+      Own property:
+      ${ word(yesno(own_property_no)) }
+  - Edit: real_estate_address
+    button: |
+      Real estate address:
+      ${ real_estate_address }
+  - Edit: sold_property_assets_no
+    button: |
+      Sold property assets:
+      ${ word(yesno(sold_property_assets_no)) }
+  - Edit: sold_property_assets_answer
+    button: |
+      Sold property assets answer:
+      ${ sold_property_assets_answer }
+  - Edit: property_sale_amount
+    button: |
+      Property sale amount:
+      ${ property_sale_amount }
+  - Edit: property_value_amount
+    button: |
+      Property value amount:
+      ${ property_value_amount }
+  - Edit: medical_expense
+    button: |
+      Medical expense:
+      ${ medical_expense }
+  - Edit: child_care
+    button: |
+      Child care:
+      ${ child_care }
+  - Edit: health_insurance
+    button: |
+      Health insurance:
+      ${ health_insurance }
+  - Edit: other_home_expenses
+    button: |
+      Other home expenses:
+      ${ other_home_expenses }
+  - Edit: child_support
+    button: |
+      Child support:
+      ${ child_support }
+  - Edit: housing_assistance_yes
+    button: |
+      Housing assistance:
+      ${ word(yesno(housing_assistance_yes)) }
+  - Edit: housing_assistance_no
+    button: |
+      Housing assistance:
+      ${ word(yesno(housing_assistance_no)) }
+  - Edit: housing_assistance_household_head
+    button: |
+      Housing assistance household head:
+      ${ housing_assistance_household_head }
+  - Edit: housing_assistance_agency
+    button: |
+      Housing assistance agency:
+      ${ housing_assistance_agency }
+  - Edit: housing_assistance_moveout
+    button: |
+      Housing assistance moveout:
+      ${ housing_assistance_moveout }
+  - Edit: moveout_reason
+    button: |
+      Moveout reason:
+      ${ moveout_reason }
+  - Edit: assitance_backrent_yes
+    button: |
+      Assitance backrent:
+      ${ word(yesno(assitance_backrent_yes)) }
+  - Edit: assitance_backrent_no
+    button: |
+      Assitance backrent:
+      ${ word(yesno(assitance_backrent_no)) }
+  - Edit: assitance_terminated_no
+    button: |
+      Assitance terminated:
+      ${ word(yesno(assitance_terminated_no)) }
+  - Edit: assitance_terminated_yes
+    button: |
+      Assitance terminated:
+      ${ word(yesno(assitance_terminated_yes)) }
+  - Edit: assitance_backrent_explain
+    button: |
+      Assitance backrent explain:
+      ${ assitance_backrent_explain }
+  - Edit: owe_backrent_yes
+    button: |
+      Owe backrent:
+      ${ word(yesno(owe_backrent_yes)) }
+  - Edit: owe_backrent_no
+    button: |
+      Owe backrent:
+      ${ word(yesno(owe_backrent_no)) }
+  - Edit: previous_evicted_yes
+    button: |
+      Previous evicted:
+      ${ word(yesno(previous_evicted_yes)) }
+  - Edit: previous_evicted_no
+    button: |
+      Previous evicted:
+      ${ word(yesno(previous_evicted_no)) }
+  - Edit: explain_rental_history
+    button: |
+      Explain rental history:
+      ${ explain_rental_history }
+  - Edit: convicted_yes
+    button: |
+      Convicted:
+      ${ word(yesno(convicted_yes)) }
+  - Edit: pending_yes
+    button: |
+      Pending:
+      ${ word(yesno(pending_yes)) }
+  - Edit: convicted_no
+    button: |
+      Convicted:
+      ${ word(yesno(convicted_no)) }
+  - Edit: pending_no
+    button: |
+      Pending:
+      ${ word(yesno(pending_no)) }
+  - Edit: sex_offender_yes
+    button: |
+      Sex offender:
+      ${ word(yesno(sex_offender_yes)) }
+  - Edit: sex_offender_no
+    button: |
+      Sex offender:
+      ${ word(yesno(sex_offender_no)) }
+  - Edit: criminal_record_explination
+    button: |
+      Criminal record explination:
+      ${ criminal_record_explination }
+  - Edit: users[0]
+    button: |
+      users[0]:
+      ${ users[0] }
+  - Edit: users[0].address.address
+    button: |
+      users[0].address.address:
+      ${ users[0].address.address }
+  - Edit: users[0].address.unit
+    button: |
+      users[0].address.unit:
+      ${ users[0].address.unit }
+  - Edit: users[0].address.city
+    button: |
+      users[0].address.city:
+      ${ users[0].address.city }
+  - Edit: users[0].address.state
+    button: |
+      users[0].address.state:
+      ${ users[0].address.state }
+  - Edit: users[0].address.zip
+    button: |
+      users[0].address.zip:
+      ${ users[0].address.zip }
+  - Edit: users[0].phone_number
+    button: |
+      users[0].phone_number:
+      ${ users[0].phone_number }
+  - Edit: users[0].email
+    button: |
+      users[0].email:
+      ${ users[0].email }
+  - Edit: users[0].signature
+    button: |
+      users[0].signature:
+      ${ users[0].signature }
+  - Edit: signature_date
+    button: |
+      signature_date:
+      ${ signature_date }

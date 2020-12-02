@@ -1,8 +1,17 @@
+---
+modules: 
+  - .customincome
+---
 include:
   - docassemble.MAVirtualCourt:basic-questions.yml
+  - docassemble.income:financial_statement.yml
+---
+objects: 
+  - cash: IncomeList.using(there_is_another=False,complete_attribute='type')
 ---
 comment: |
   The metadata section controls the tab title and saved interview title. You can delete this section if you include this YAML file in another YAML file.
+
 metadata:
   title: |
     Massachusetts Rental Voucher Program
@@ -37,59 +46,91 @@ features:
 sections:
   - review_RentalVoucher: Review your answers
 ---
-id: interview_order_RentalVoucher
+id: order block
 code: |
   # This is a placeholder to control logic flow in this interview
-
   basic_questions_intro_screen 
   RentalVoucher_intro
   # Set the allowed courts for this interview
   allowed_courts = interview_metadata["RentalVoucher"]["allowed courts"]
   nav.set_section('review_RentalVoucher')
   user_role = 'plaintiff'
-  household1_name
-  household2_relationship
-  household1_birthdate
-  household1_sex
-  household1_ssn
-  set_progress(8.33)
-  household1_race
-  household1_ethnic
-  no_understand_english
-  primary_spoken_language
-  immediate_threat
-  set_progress(16.67)
-  reside_application_town_yes
-  special_needs_yes
-  emergency_contact
-  household1_employer
-  set_progress(25.0)
-  household1_gross
-  asset_1
-  financial_institution_1
-  own_property_yes
-  sold_property_assets_no
-  set_progress(33.33)
-  property_sale_amount
-  medical_expense
-  housing_assistance_yes
-  convicted_yes
-  pending_yes
-  set_progress(41.67)
-  sex_offender_yes
-  user1_mobile
-  # Set the answer file name.
-  set_parts(subtitle=str(users))
-  str(users[0])
+  users.target_number = 8
+  cash.there_is_another = False
+  users.there_is_another = False
+  users[0].name.first
   users[0].address.address
-  set_progress(50.0)
-  users[0].address.unit
-  users[0].address.city
-  users[0].address.state
-  users[0].address.zip
   users[0].phone_number
+  house_count
+  set_progress(8.33)
+  users[1].name.first # head of household
+  household1_birthdate # head of household 
+  if house_count >= 2:
+    users[3].name.first and household2_relationship  
+  if house_count >= 3: 
+    users[4].name.first and household3_relationship
+  if house_count >= 4: 
+    users[5].name.first and household4_relationship
+  if house_count >= 5: 
+    users[6].name.first and household5_relationship
+  if house_count >= 6: 
+    users[7].name.first and household6_relationship
+  if house_count >= 7: 
+    users[8].name.first and household7_relationship
+  set_progress(16.67)
+  understand_english
+  primary_spoken_language
+  primary_written_language
+  reside_application
+  work_application
+  child_school_application
+  if special_needs == True:
+    special_needs_info
+  ### income 
+  cash.gather()
+  if cash.there_are_any: 
+    review_cash
+  set_progress(25.0)
+  ### assets
+  assets.gather()
+  assets.add_assets
+  if assets.there_are_any:
+    review_assets
+  if own_property == True:
+    real_estate_address
+  set_progress(33.33)
+  if sold_property:
+    sold_property_assets_answer
+  medical_expense
+  if housing_assistance_previous:
+    housing_assistance_agency
+    housing_assistance_household_head
+    if moveout_date_unknown: 
+      housing_assistance_moveout_guess
+    moveout_reason
+    assitance_terminated
+    assitance_backrent
+  if assitance_terminated or assitance_backrent: 
+    assitance_backrent_explain
+  if owe_backrent or previous_evicted: 
+    explain_rental_history
+  set_progress(41.67)
+  sex_offender
+  pending_criminal
+  convicted_crime
+  if sex_offender or pending_criminal or convicted_crime: 
+    criminal_record_explination
+  if (without_home or immediate_threat) and not_contributed_to_situation and reasonable_efforts and (displaced_resdidence or displaced_current):
+    homelessness_displacement
+  set_progress(50.0)
+  users[2].name.first # emergency contact name 
+  users[2].address.address # emergency contact address
+  users[2].mobile_number  # emergency contact contact
+  user_math_logic
+  total_gross_income
+  #set_parts(subtitle=str(users))
+  #str(users[0])
   set_progress(58.33)
-  users[0].email
   signature_date
   # Save (anonymized) interview statistics.
   store_variables_snapshot(data={'zip': users[0].address.zip})
@@ -98,6 +139,7 @@ code: |
   users[0].signature
   RentalVoucher = True
 ---
+
 comment: |
   This question is used to introduce your interview. Please customize
 id: Massachusetts Rental Voucher Program
@@ -116,554 +158,1115 @@ subquestion: |
   
    ${ pdf_concatenate(RentalVoucher_attachment['preview'], filename='RentalVoucher.pdf')}
 ---
-id: Name of people in your household
-question: |
-  Name of people in your household
-subquestion: |
-  Please provide
-fields:
-  - 'Household1 name  1': household1_name
-    maxlength: 17
-  - 'Household2 name  1': household2_name
-    maxlength: 17
-  - 'Household3 name  1': household3_name
-    maxlength: 17
-  - 'Household4 name  1': household4_name
-    maxlength: 17
-  - 'Household5 name  1': household5_name
-    maxlength: 17
-  - 'Household6 name  1': household6_name
-    maxlength: 17
-  - 'Household7 name  1': household7_name
-    maxlength: 17
+id: household count
+question: | 
+  How many people are in your household?
+fields: 
+  - People in household: house_count
+    datatype: integer
+    min: 1
+    max: 7 
+validation code: |
+  if house_count < 2 and house_count > 7:
+    validation_error("This interview is set up to handle a maximum household size of 7 individuals")
 ---
-id: What is their relationship to the head of household?
+id: name of applicant
 question: |
-  What is their relationship to the head of household?
-subquestion: |
-  Placeholder text
+  Who is the name of the person filling out the application? 
 fields:
-  - 'Household2 relationship': household2_relationship
-    maxlength: 16
-  - 'Household3 relationship': household3_relationship
-    maxlength: 16
-  - 'Household4 relationship': household4_relationship
-    maxlength: 16
-  - 'Household5 relationship': household5_relationship
-    maxlength: 16
-  - 'Household6 relationship': household6_relationship
-    maxlength: 16
-  - 'Household7 relationship': household7_relationship
-    maxlength: 16
+  - First Name: users[0].name.first
+  - Middle Name: users[0].name.middle
+    required: False
+  - Last Name: users[0].name.last
+  - Suffix: users[0].name.suffix
+    code: |
+      name_suffix()
+    required: False
 ---
-id: _birthday
+id: head of household name
 question: |
-  _birthday
-subquestion: |
-  Please provide birthday of the household members
+  What is your head of household's name? 
 fields:
-  - 'Household1 birthdate': household1_birthdate
-    maxlength: 14
-  - 'Household2 birthdate': household2_birthdate
-    maxlength: 14
-  - 'Household3 birthdate': household3_birthdate
-    maxlength: 14
-  - 'Household4 birthdate': household4_birthdate
-    maxlength: 14
-  - 'Household5 birthdate': household5_birthdate
-    maxlength: 14
-  - 'Household6 birthdate': household6_birthdate
-    maxlength: 14
-  - 'Household7 birthdate': household7_birthdate
-    maxlength: 14
+  - First Name: users[1].name.first
+  - Middle Name: users[1].name.middl
+    required: False
+  - Last Name: users[1].name.last
+  - Suffix: users[1].name.suffix
+    code: |
+      name_suffix()
+    required: False  
+help: 
+  label: What is a head of household? 
+  heading: What is a head of household? 
+  content: |
+    Head of Household – the adult member of the family who is considered to be the head of household for purposes of determining income eligibility and rent. The head of household is responsible for ensuring that the family fulfills all of its responsibilities under MRVP. The family may designate any qualified family member as the head of household. The head of household must have the legal capacity to enter into a lease under state and local law. If the head of household is a student, he or she shall not be considered a full-time student pursuant to the definition above for purposes of calculating exclusions from household income under 760 CMR 49.05. 
 ---
-id: Please provide the sex of the members of your household
+id: maths 1
+code: |
+  if house_count == 1:
+    users[3].name.first = ' '
+    users[3].name.middle = ' ' 
+    users[3].name.last = ' ' 
+    users[3].name.suffix = ' '
+    users[4].name.first = ' '
+    users[4].name.middle = ' ' 
+    users[4].name.last = ' ' 
+    users[4].name.suffix = ' '
+    users[5].name.first = ' '
+    users[5].name.middle = ' ' 
+    users[5].name.last = ' ' 
+    users[5].name.suffix = ' '
+    users[6].name.first = ' '
+    users[6].name.middle = ' ' 
+    users[6].name.last = ' ' 
+    users[6].name.suffix = ' '
+    users[7].name.first = ' '
+    users[7].name.middle = ' ' 
+    users[7].name.last = ' ' 
+    users[7].name.suffix = ' '
+    users[8].name.first = ' '
+    users[8].name.middle = ' ' 
+    users[8].name.last = ' ' 
+    users[8].name.suffix = ' '
+  if house_count == 2: 
+    users[4].name.first = ' '
+    users[4].name.middle = ' ' 
+    users[4].name.last = ' ' 
+    users[4].name.suffix = ' '
+    users[5].name.first = ' '
+    users[5].name.middle = ' ' 
+    users[5].name.last = ' ' 
+    users[5].name.suffix = ' '
+    users[6].name.first = ' '
+    users[6].name.middle = ' ' 
+    users[6].name.last = ' ' 
+    users[6].name.suffix = ' '
+    users[7].name.first = ' '
+    users[7].name.middle = ' ' 
+    users[7].name.last = ' ' 
+    users[7].name.suffix = ' '
+    users[8].name.first = ' '
+    users[8].name.middle = ' ' 
+    users[8].name.last = ' ' 
+    users[8].name.suffix = ' '
+  if house_count == 3: 
+    users[5].name.first = ' '
+    users[5].name.middle = ' ' 
+    users[5].name.last = ' ' 
+    users[5].name.suffix = ' '
+    users[6].name.first = ' '
+    users[6].name.middle = ' ' 
+    users[6].name.last = ' ' 
+    users[6].name.suffix = ' '
+    users[7].name.first = ' '
+    users[7].name.middle = ' ' 
+    users[7].name.last = ' ' 
+    users[7].name.suffix = ' '
+    users[8].name.first = ' '
+    users[8].name.middle = ' ' 
+    users[8].name.last = ' ' 
+    users[8].name.suffix = ' '
+  if house_count == 4: 
+    users[6].name.first = ' '
+    users[6].name.middle = ' ' 
+    users[6].name.last = ' ' 
+    users[6].name.suffix = ' '
+    users[7].name.first = ' '
+    users[7].name.middle = ' ' 
+    users[7].name.last = ' ' 
+    users[7].name.suffix = ' '
+    users[8].name.first = ' '
+    users[8].name.middle = ' ' 
+    users[8].name.last = ' ' 
+    users[8].name.suffix = ' '
+  if house_count == 5: 
+    users[6].name.first = ' '
+    users[6].name.middle = ' ' 
+    users[6].name.last = ' ' 
+    users[6].name.suffix = ' '
+    users[7].name.first = ' '
+    users[7].name.middle = ' ' 
+    users[7].name.last = ' ' 
+    users[7].name.suffix = ' '
+    users[8].name.first = ' '
+    users[8].name.middle = ' ' 
+    users[8].name.last = ' ' 
+    users[8].name.suffix = ' '
+  if house_count == 6: 
+    users[8].name.first = ' '
+    users[8].name.middle = ' ' 
+    users[8].name.last = ' ' 
+    users[8].name.suffix = ' '
+  user_math_logic = True 
+---
+id: person 2 
 question: |
-  Please provide the sex of the members of your household
-subquestion: |
-  Placeholder text
+  What is the name of the next person in your house?
+subquestion: | 
+  You already told us about ${ users[1].name.first }. 
 fields:
-  - 'Household1 sex': household1_sex
-    maxlength: 7
-  - 'Household2 sex': household2_sex
-    maxlength: 7
-  - 'Household3 sex': household3_sex
-    maxlength: 7
-  - 'Household4 sex': household4_sex
-    maxlength: 7
-  - 'Household5 sex': household5_sex
-    maxlength: 7
-  - 'Household6 sex': household6_sex
-    maxlength: 7
-  - 'Household7 sex': household7_sex
-    maxlength: 7
+  - First Name: users[3].name.first
+  - Middle Name: users[3].name.middle
+    required: False
+  - Last Name: users[3].name.last
+  - Suffix: users[3].name.suffix
+    code: |
+      name_suffix()
+    required: False 
 ---
-id: ssn
+id: person 3 
 question: |
-  ssn
-subquestion: |
-  Please provdie the ssn for each individual
+  What is the name of the next person in your house?
+subquestion: | 
+  You already told us about ${ users[1].name.first } and ${ users[3].name.first }
 fields:
-  - 'Household1 ssn': household1_ssn
-    maxlength: 11
-  - 'Household2 ssn': household2_ssn
-    maxlength: 11
-  - 'Household3 ssn': household3_ssn
-    maxlength: 11
-  - 'Household4 ssn': household4_ssn
-    maxlength: 11
-  - 'Household5 ssn': household5_ssn
-    maxlength: 11
-  - 'Household6 ssn': household6_ssn
-    maxlength: 11
-  - 'Household7 ssn': household7_ssn
-    maxlength: 11
+  - First Name: users[4].name.first
+  - Middle Name: users[4].name.middle
+    required: False
+  - Last Name: users[4].name.last
+  - Suffix: users[4].name.suffix
+    code: |
+      name_suffix()
+    required: False 
 ---
-id: race
+id: person 4 
 question: |
-  race
-subquestion: |
-  Please provide the race of each individual
+  What is the name of the next person in your house?
+subquestion: | 
+  You already told us about ${ users[1].name.first }, ${ users[3].name.first } and ${ users[4].name.first }. 
 fields:
-  - 'Household1 race': household1_race
-    maxlength: 10
-  - 'Household2 race': household2_race
-    maxlength: 10
-  - 'Household3 race': household3_race
-    maxlength: 10
-  - 'Household4 race': household4_race
-    maxlength: 10
-  - 'Household5 race': household5_race
-    maxlength: 10
-  - 'Household6 race': household6_race
-    maxlength: 10
-  - 'Household7 race': household7_race
-    maxlength: 10
+  - First Name: users[5].name.first
+  - Middle Name: users[5].name.middle
+    required: False
+  - Last Name: users[5].name.last
+  - Suffix: users[5].name.suffix
+    code: |
+      name_suffix()
+    required: False  
 ---
-id: ethnic designation
+id: person 5
 question: |
-  ethnic designation
+  What is the name of the next person in your house?
 subquestion: |
-  Hispanic/Latino or Not Hispanic/Latino
+  You already told us about ${ users[1].name.first }, ${ users[3].name.first }, ${ users[4].name.first } and  ${ users[5].name.first }.
 fields:
-  - 'Household1 ethnic': household1_ethnic
-    maxlength: 10
-  - 'Household2 ethnic': household2_ethnic
-    maxlength: 10
-  - 'Household3 ethnic': household3_ethnic
-    maxlength: 10
-  - 'Household4 ethnic': household4_ethnic
-    maxlength: 10
-  - 'Household5 ethnic': household5_ethnic
-    maxlength: 10
-  - 'Household6 ethnic': household6_ethnic
-    maxlength: 10
-  - 'Household7 ethnic': household7_ethnic
+  - First Name: users[6].name.first
+  - Middle Name: users[6].name.middle
+    required: False
+  - Last Name: users[6].name.last
+  - Suffix: users[6].name.suffix
+    code: |
+      name_suffix()
+    required: False  
+---
+id: person 6
+question: |
+  What is the name of the next person in your house?
+subquestion: | 
+  You already told us about ${ users[1].name.first }, ${ users[3].name.first }, ${ users[4].name.first }  ${ users[5].name.first }, and  ${ users[6].name.first }. 
+fields:
+  - First Name: users[7].name.first
+  - Middle Name: users[7].name.middle
+    required: False
+  - Last Name: users[7].name.last
+  - Suffix: users[7].name.suffix
+    code: |
+      name_suffix()
+    required: False  
+---
+id: person 7
+question: |
+  What is the name of the next person in your house?
+subquestion: |
+  You already told us about ${ users[1].name.first }, ${ users[3].name.first }, ${ users[4].name.first }  ${ users[5].name.first },  ${ users[6].name.first }, and ${ users[7].name.first }. 
+fields:
+  - First Name: users[8].name.first
+  - Middle Name: users[8].name.middle
+    required: False
+  - Last Name: users[8].name.last
+  - Suffix: users[8].name.suffix
+    code: |
+      name_suffix()
+    required: False  
+---
+id: head of household info
+question: | 
+  Tell us about the head of house household, ${ users[1].name.first }
+fields:
+  - 'Birthdate': household1_birthdate
+    datatype: birthdate
+    maxlength: 14
+  - 'Sex': household1_sex
+    choices: 
+      - Male: Male
+      - Female: Female
+      - Prefer not to say: Prefer not to say
+    maxlength: 7
+  - 'Social Security Number': household1_ssn
+    hint: e.g. 123-45-6789
+    datatype: ssn
+    maxlength: 11
+  - 'Racial Designation': household1_race
+    help: |
+      Responding to this question is **optional**. Your status with respect to tenant selection procedures will not be affected by this information.
+    choices: 
+      - American Indian or Alaska Native: American Indian or Alaska Native
+      - Asian: Asian
+      - Black or African American: Black or African American
+      - Native Hawaiian or Other Pacific Islander: Native Hawaiian Other Pacific Islander
+      - White: White
+      - Other (specify): Other
+    required: False
+  - Specify Racial Designation: race1_other 
+    show if: 
+      variable: household1_race 
+      is: Other
+    required: False
+  - 'Ethnic Designation' : household1_ethnic
+    help: |
+      Responding to this question is **optional**. Your status with respect to tenant selection procedures will not be affected by this information.
+    choices: 
+      - Hispanic/Latino: Hispanic/Latino
+      - Not Hispanic/Latino: Not Hispanic/Latino
+    required: False 
     maxlength: 10
 ---
-id: English
+id: member 2 
+question: | 
+  Tell us about ${ users[3].name.first }
+fields:
+  - 'Relationship to Head of Household': household2_relationship
+    hint: e.g. Spouse, child, sibling
+  - 'Birthdate': household2_birthdate
+    datatype: birthdate
+    maxlength: 14
+  - 'Sex': household2_sex
+    choices: 
+      - Male: Male
+      - Female: Female
+      - Prefer not to say: Prefer not to say
+    maxlength: 7
+  - 'Social Security Number': household2_ssn
+    hint: e.g. 123-45-6789
+    datatype: ssn
+    maxlength: 11
+  - 'Racial Designation': household2_race
+    help: |
+      Responding to this question is **optional**. Your status with respect to tenant selection procedures will not be affected by this information.
+    choices: 
+      - American Indian or Alaska Native: American Indian or Alaska Native
+      - Asian: Asian
+      - Black or African American: Black or African American
+      - Native Hawaiian or Other Pacific Islander: Native Hawaiian Other Pacific Islander
+      - White: White
+      - Other (specify): Other
+    required: False
+  - Specify Racial Designation: race2_other 
+    show if: 
+      variable: household2_race 
+      is: Other
+    required: False
+  - 'Ethnic Designation' : household2_ethnic
+    help: |
+      Responding to this question is **optional**. Your status with respect to tenant selection procedures will not be affected by this information.
+    choices: 
+      - Hispanic/Latino: Hispanic/Latino
+      - Not Hispanic/Latino: Not Hispanic/Latino
+    required: False 
+    maxlength: 10
+---
+id: member 3
+question: | 
+  Tell us about ${ users[4].name.first }
+fields:
+  - 'Relationship to Head of Household': household3_relationship
+    hint: e.g. Spouse, child, sibling
+  - 'Birthdate': household3_birthdate
+    datatype: birthdate
+    maxlength: 14
+  - 'Sex': household3_sex
+    choices: 
+      - Male: Male
+      - Female: Female
+      - Prefer not to say: Prefer not to say
+    maxlength: 7
+  - 'Social Security Number': household3_ssn
+    hint: e.g. 123-45-6789
+    datatype: ssn 
+    maxlength: 11
+  - 'Racial Designation': household3_race
+    help: |
+      Responding to this question is **optional**. Your status with respect to tenant selection procedures will not be affected by this information.
+    choices: 
+      - American Indian or Alaska Native: American Indian or Alaska Native
+      - Asian: Asian
+      - Black or African American: Black or African American
+      - Native Hawaiian or Other Pacific Islander: Native Hawaiian Other Pacific Islander
+      - White: White
+      - Other (specify): Other
+    required: False
+  - Specify Racial Designation: race3_other 
+    show if: 
+      variable: household3_race 
+      is: Other
+  - 'Ethnic Designation' : household3_ethnic
+    help: |
+      Responding to this question is **optional**. Your status with respect to tenant selection procedures will not be affected by this information.
+    choices: 
+      - Hispanic/Latino: Hispanic/Latino
+      - Not Hispanic/Latino: Not Hispanic/Latino
+    required: False 
+    maxlength: 10
+---
+id: member 4
+question: | 
+  Tell us about ${ users[5].name.first }
+fields:
+  - 'Relationship to Head of Household': household4_relationship
+    hint: e.g. Spouse, child, sibling 
+  - 'Birthdate': household4_birthdate
+    datatype: birthdate
+    maxlength: 14
+  - 'Sex': household4_sex
+    choices: 
+      - Male: Male
+      - Female: Female
+      - Prefer not to say: Prefer not to say
+    maxlength: 7
+  - 'Social Security Number': household4_ssn
+    hint: e.g. 123-45-6789
+    datatype: ssn   
+    maxlength: 11
+  - 'Racial Designation': household4_race
+    help: |
+      Responding to this question is **optional**. Your status with respect to tenant selection procedures will NOT be affected by this information.
+    choices: 
+      - American Indian or Alaska Native: American Indian or Alaska Native
+      - Asian: Asian
+      - Black or African American: Black or African American
+      - Native Hawaiian or Other Pacific Islander: Native Hawaiian Other Pacific Islander
+      - White: White
+      - Other (specify): Other
+    required: False
+  - Specify Racial Designation: race4_other 
+    show if: 
+      variable: household4_race 
+      is: Other
+  - 'Ethnic Designation' : household4_ethnic
+    help: |
+      Responding to this question is **optional**. Your status with respect to tenant selection procedures will not be affected by this information.
+    choices: 
+      - Hispanic/Latino: Hispanic/Latino
+      - Not Hispanic/Latino: Not Hispanic/Latino
+    required: False 
+    maxlength: 10
+---
+id: member 5
+question: | 
+  Tell us about ${ users[6].name.first }
+fields:
+  - 'Relationship to Head of Household': household5_relationship
+    hint: e.g. Spouse, child, siblimg 
+  - 'Birthdate': household5_birthdate
+    datatype: birthdate
+    maxlength: 14
+  - 'Sex': household5_sex
+    choices: 
+      - Male: Male
+      - Female: Female
+      - Prefer not to say: Prefer not to say
+    maxlength: 7
+  - 'Social Security Number': household5_ssn
+    hint: 123-45-6789
+    datatype: ssn 
+    maxlength: 11
+  - 'Racial Designation': household5_race
+    help: |
+      Responding to this question is **optional**. Your status with respect to tenant selection procedures will NOT be affected by this information.
+    choices: 
+      - American Indian or Alaska Native: American Indian or Alaska Native
+      - Asian: Asian
+      - Black or African American: Black or African American
+      - Native Hawaiian or Other Pacific Islander: Native Hawaiian Other Pacific Islander
+      - White: White
+      - Other (specify): Other
+    required: False
+  - Specify Racial Designation: race5_other 
+    show if: 
+      variable: household5_race 
+      is: Other
+  - 'Ethnic Designation' : household5_ethnic
+    help: |
+      Responding to this question is **optional**. Your status with respect to tenant selection procedures will not be affected by this information.
+    choices: 
+      - Hispanic/Latino: Hispanic/Latino
+      - Not Hispanic/Latino: Not Hispanic/Latino
+    required: False 
+    maxlength: 10
+---
+id: member 6
+question: | 
+  Tell us about ${ users[7].name.first }
+fields:
+  - 'Relationship to Head of Household': household6_relationship
+    hint: e.g. Spouse, child, sibling
+  - 'Birthdate': household6_birthdate
+    datatype: birthdate
+    maxlength: 14
+  - 'Sex': household6_sex
+    choices: 
+      - Male: Male
+      - Female: Female
+      - Prefer not to say: Prefer not to say
+    maxlength: 7
+  - 'Social Security Number': household6_ssn
+    hint: 123-45-6789
+    datatype: ssn 
+    maxlength: 11
+  - 'Racial Designation': household6_race
+    help: |
+      Responding to this question is **optional**. Your status with respect to tenant selection procedures will NOT be affected by this information.
+    choices: 
+      - American Indian or Alaska Native: American Indian or Alaska Native
+      - Asian: Asian
+      - Black or African American: Black or African American
+      - Native Hawaiian or Other Pacific Islander: Native Hawaiian Other Pacific Islander
+      - White: White
+      - Other (specify): Other
+    required: False
+  - Specify Racial Designation: race6_other 
+    show if: 
+      variable: household6_race 
+      is: Other
+  - 'Ethnic Designation' : household6_ethnic
+    help: |
+      Responding to this question is **optional**. Your status with respect to tenant selection procedures will not be affected by this information.
+    choices: 
+      - Hispanic/Latino: Hispanic/Latino
+      - Not Hispanic/Latino: Not Hispanic/Latino
+    required: False 
+    maxlength: 10
+---
+id: member 7
+question: | 
+  Tell us about ${ users[8].name.first }
+fields:
+  - 'Relationship to Head of Household': household7_relationship
+    hint: e.g. Spouse, child, sibling 
+  - 'Birthdate': household7_birthdate
+    datatype: birthdate
+    maxlength: 14
+  - 'Sex': household7_sex
+    choices: 
+      - Male: Male
+      - Female: Female
+      - Other: Other
+      - Prefer not to say: Prefer not to say 
+    maxlength: 7
+  - 'Social Security Number': household7_ssn
+    hint: e.g. 123-45-6789
+    datatype: ssn 
+    maxlength: 11
+  - 'Racial Designation': household7_race
+    help: |
+      Responding to this question is **optional**. Your status with respect to tenant selection procedures will NOT be affected by this information.
+    choices: 
+      - American Indian or Alaska Native: American Indian or Alaska Native
+      - Asian: Asian
+      - Black or African American: Black or African American
+      - Native Hawaiian or Other Pacific Islander: Native Hawaiian Other Pacific Islander
+      - White: White
+      - Other (specify): Other
+    required: False
+  - Specify Racial Designation: race7_other 
+    show if: 
+      variable: household7_race 
+      is: Other
+  - 'Ethnic Designation' : household7_ethnic
+    help: |
+      Responding to this question is **optional**. Your status with respect to tenant selection procedures will not be affected by this information.
+    choices: 
+      - Hispanic/Latino: Hispanic/Latino
+      - Not Hispanic/Latino: Not Hispanic/Latino
+    required: False 
+    maxlength: 10
+---
+id: spoken and written language
 question: |
-  English
-subquestion: |
   Do you understand spoken or written English?
-fields:
-  - 'No understand english': no_understand_english
-    datatype: yesno
-  - 'Yes understand english': yes_understand_english
-    datatype: yesno
+yesno: understand_english
 ---
-id: primary language
+id: primary spoken language
 question: |
-  primary language
-subquestion: |
-  primary language spoken written
+  What is your primary spoken language ?
 fields:
-  - 'Primary spoken language': primary_spoken_language
-    maxlength: 126
-  - 'Primary written language': primary_written_language
+  - 'no label': primary_spoken_language
     maxlength: 126
 ---
-id: homeless prioroty
+id: primary written
 question: |
-  homeless prioroty
-subquestion: |
-  If you want to apply for a Homeless Priority, you must first be considered homeless.
-  
-  You must be able to check all
+  What is your primary written language?
 fields:
-  - 'Immediate threat': immediate_threat
-    datatype: yesno
-  - 'Not contributed to situation': not_contributed_to_situation
-    datatype: yesno
-  - 'Reasonable efforts': reasonable_efforts
-    datatype: yesno
-  - 'Displaced resdidence': displaced_resdidence
-    datatype: yesno
-  - 'Displaced no fault': displaced_no_fault
-    datatype: yesno
-  - 'Displaced medical': displaced_medical
-    datatype: yesno
-  - 'Displaced domestic violence': displaced_domestic_violence
-    datatype: yesno
-  - 'Displaced natural forces': displaced_natural_forces
-    datatype: yesno
-  - 'Displaced public action 1': displaced_public_action_1
-    datatype: yesno
-  - 'Displaced public action 2': displaced_public_action_2
-    datatype: yesno
+  - 'no label': primary_written_language
+    maxlength: 126
 ---
-id: local preference
+id: homeless priority
 question: |
-  local preference
-subquestion: |
-  If you are applying at a Local Housing Authority, you may receive a local preference if you live,work, or have children attending school in the same city/town of the Local Housing Authority. Please answer the following:
+  Check any and all that apply to you and your household
 fields:
-  - 'Reside application town': reside_application_town_yes
-    datatype: yesno
-  - 'Reside application town': reside_application_town_no
-    datatype: yesno
-  - 'Work application town': work_application_town_yes
-    datatype: yesno
-  - 'Work application town': work_application_town_no
-    datatype: yesno
-  - 'Child school application town': child_school_application_town_yes
-    datatype: yesno
-  - 'Child school application town': child_school_application_town_no
-    datatype: yesno
+  - 'I am without a place to live': without_home
+    datatype: yesnowide
+  - 'I am in a living situation with a significant, immediate and direct threat of life or safety that would be fixed by placement in an appropriate unit': immediate_threat
+    datatype: yesnowide
+  - 'I have not caused or substantially contributed to the situation': not_contributed_to_situation
+    datatype: yesnowide
+  - 'I made reasonable efforts to prevent or avoid the situation and to locate alternative housing': reasonable_efforts
+    datatype: yesnowide
+  - 'I am displaced': displaced_current
+    datatype: yesnowide
+  - 'I am about to be displaced from my primary residence': displaced_resdidence
+    datatype: yesnowide
+---
+id: meet homeless definition 
+question: | 
+  Please select the category below that best describes **why you were displaced**.
+subquestion: |
+  Based on your answers, you may meet the definition of homeless and may qualify for the priority. Homelessness must be due to one of the categories below to qualify. 
+fields: 
+  - no label: homelessness_displacement
+    input type: radio
+    choices: 
+      - 'No-fault of applicant like no-faul eviction': displaced_no_fault
+      - 'Severe medical emergency': displaced_medical
+      - 'Domestic violence': displaced_domestic_violence
+      - 'Natural forces like fire, flood, or earchquake': displaced_natural_forces
+      - 'Public action like urban renewal or eminent domain': displaced_public_action_1
+      - 'Public action like condemnation of your home': displaced_public_action_2 
+      - 'None of the above'
+---
+id: local pref 1 
+question: |
+  Do you currently reside in the same city or town that the Local Housing Authority to which you are applying is located in
+yesno: reside_application
+---
+id: local pref 2 
+question: |
+  Do you currently work in the same city or town that the Local Housing Authority to which you are applying is located in?
+yesno: work_application
+---
+id: local pref 3
+question: | 
+  Do you currently have a child who attends school in the same city or town that the Local Housing Authority to which you are applying is located in?
+yesno: child_school_application
 ---
 id: special needs
 question: |
-  special needs
-subquestion: |
   Do you have any special needs due to a disability or need a reasonable accommodation?
-fields:
-  - 'Special needs': special_needs_yes
-    datatype: yesno
-  - 'Special needs': special_needs_no
-    datatype: yesno
-  - 'Special needs info': special_needs_info
+yesno: special_needs
+---
+id: specify special ed info 
+question: |
+  Specify details about the special needs due to your disability or reasonable accommodation
+fields: 
+  - 'no label': special_needs_info
+    input type: area
+    rows: 3
     maxlength: 292
 ---
 id: emergency contact
 question: |
-  emergency contact
+  Provide an emergency contact
 subquestion: |
-  7. Emergency Contact:  Name of a relative or friend NOT planning to live with you.  We will contact this person if we are unable to reach you in case of an emergency.
+  Name of a relative or friend **not planning to live with you.** 
+  
+  The housing agency may contact your emergency contact if they are unable to reach you in case of an emergency.
 fields:
-  - 'Emergency contact': emergency_contact
-    maxlength: 52
-  - 'Emergency contact relationship': emergency_contact_relationship
+  - 'Your relationship to this person': emergency_contact_relationship
     maxlength: 70
-  - 'Emergency address': emergency_address
-    maxlength: 108
-  - 'Emergency address2': emergency_address2
-    maxlength: 24
-  - 'Emergency address city': emergency_address_city
-    maxlength: 88
-  - 'Emergency address state': emergency_address_state
-    maxlength: 12
-  - 'Emergency address zip': emergency_address_zip
-    maxlength: 24
-  - 'Emergency mobile': emergency_mobile
-    maxlength: 54
-  - 'Emergency phone': emergency_phone
-    maxlength: 68
-  - 'Emergency email': emergency_email
-    maxlength: 148
----
-id: repeat
+  - First Name: users[2].name.first
+  - Middle Name: users[2].name.middle
+    required: False
+  - Last Name: users[2].name.last
+  - Suffix: users[2].name.suffix
+    code: |
+      name_suffix()
+    required: False
+---  
+id: emergency contact address
 question: |
-  repeat
+  What is ${ users[2].name }'s address?
 subquestion: |
-  household name repeat
+  The housing agency will contact ${ users[2].name} if they are unable to reach you in case of an emergency.
 fields:
-  - 'Household1 name  2': household1_name
-    maxlength: 42
-  - 'Household2 name  2': household2_name
-    maxlength: 42
-  - 'Household3 name  2': household3_name
-    maxlength: 42
-  - 'Household4 name  2': household4_name
-    maxlength: 42
-  - 'Household5 name  2': household5_name
-    maxlength: 42
-  - 'Household6 name  2': household6_name
-    maxlength: 42
-  - 'Household7 name  2': household7_name
-    maxlength: 42
-  - 'Household8 name  2': household8_name
-    maxlength: 42
-  - 'Household9 name  2': household9_name
-    maxlength: 42
-  - 'Household10 name  2': household10_name
-    maxlength: 42
+  - Street address: users[2].address.address
+    address autocomplete: True
+  - Unit: users[2].address.unit
+    required: False
+  - City: users[2].address.city
+  - State: users[2].address.state
+    code: |
+      states_list()
+    default: MA      
+  - Zip: users[2].address.zip
+    required: False
 ---
-id: income before deduction
+id: emergency contact contact info 
 question: |
-  income before deduction
+  What is ${ users[2].name.first }'s contact information?
 subquestion: |
-  Estimate the Gross Income anticipated for ALL household members from ALl sources for the next 12 months
-fields:
-  - 'Household1 employer': household1_employer
-    maxlength: 62
-  - 'Household2 employer': household2_employer
-    maxlength: 62
-  - 'Household3 employer': household3_employer
-    maxlength: 62
-  - 'Household6 employer': household6_employer
-    maxlength: 62
-  - 'Household7 employer': household7_employer
-    maxlength: 62
-  - 'Household9 employer': household9_employer
-    maxlength: 62
-  - 'Household10 employer': household10_employer
-    maxlength: 62
+  The housing agency may contact ${ users[2].name} if they are unable to reach you in case of an emergency.
+fields:  
+  - Mobile number: users[2].mobile_number 
+    required: False
+  - Other phone number: users[2].phone_number
+    required: False
+  - Email address: users[2].email    
+    datatype: email
+    required: False
+validation code: |
+  if (not showifdef('users[2].phone_number') and \
+      (not showifdef('users[2].mobile_number')) and \
+      (not showifdef('users[2].email'))):
+    validation_error(word("You need to provide at least one contact method."))
+help: |
+  The court **must** be able to reach you. So you have to give them some way to do this.
+  
+  Some forms allow you to tell the court you need to keep your address, phone,
+  and email confidential, so that only court staff can see this information.    
 ---
-id: gross income
+id: income type checks 
 question: |
-  gross income
+  Do you, your spouse, or someone in your household own any of the following?
 subquestion: |
-  gross income for next 12 months
-  fix gross_income_1
-  add total calculation
+  Include **all** bank accounts, stocks and bond, trusts, real estate, etc. **Do not** include clothing, furniture, or cars. 
 fields:
-  - 'Ghousehold1_gross': household1_gross
-    maxlength: 24
-  - 'Household2 gross': household2_gross
-    maxlength: 24
-  - 'Household3 gross': household3_gross
-    maxlength: 24
-  - 'Household4 gross': household4_gross
-    maxlength: 24
-  - 'Household5 gross': household5_gross
-    maxlength: 24
-  - 'Household6 gross': household6_gross
-    maxlength: 24
-  - 'Household7 gross': household7_gross
-    maxlength: 24
-  - 'Household8 gross': household8_gross
-    maxlength: 24
-  - 'Household9 gross': household9_gross
-    maxlength: 24
-  - 'Household10 gross': household10_gross
-    maxlength: 24
-  - 'Total gross income': total_gross_income
-    maxlength: 13
+  - no label: cash.cash_types 
+    datatype: checkboxes
+    code: |
+      cash_type_list() 
 ---
+code: |
+  cash.there_are_any = cash.cash_types.any_true()
+---
+code: |
+  if cash.cash_types.any_true():
+    for type in cash.cash_types.true_values():
+      cash.appendObject(type=type)
+  add_cash = True
+---
+question: |
+  Income from you and your household members
+subquestion: |
+  So far you've told us about ${cash.number()} income(s).
+  You can add more or click continue to go to the next question.
+  ${ cash.table }
+  ${ cash.add_action() }
+field: review_cash
+---
+id: cash table
+table: cash.table
+rows: cash
+columns:
+  - Owner: |
+      row_item.earner
+  - Type: |
+      cash_type_list()[row_item.type]
+  -  Gross 12 Months: |
+      currency(row_item.gross)
+  - Employer: |
+      row_item.source  
+edit:
+  - gross 
+---
+id: income 
+question: |
+  Describe the ${ordinal(i)} income before deduction for your household
+subquestion: |
+  Estimate the gross income anticipated for all household members from all sources for the next 12 months
+fields:
+    - 'Household member income': cash[i].earner
+      datatype: object_radio
+      choices:
+        - showifdef('users[1].name') 
+        - showifdef('users[3].name')
+        - showifdef('users[4].name')
+        - showifdef('users[5].name')
+        - showifdef('users[6].name')
+        - showifdef('users[7].name')
+        - showifdef('users[8].name')
+    - 'Income type': cash[i].type
+      code: |
+        cash_type_list()
+    - 'Explain what type it is': cash[i].other_type
+      show if: 
+        variable: cash[i].type
+        is: 'Other'
+    - 'Employer or Source of Income ': cash[i].source
+      maxlength: 62
+    - 'Gross Income for the next 12 months': cash[i].gross
+      datatype: currency
+      default: 0
+      maxlength: 24
+---
+id: cash math 
+code: | 
+  total_gross_income = cash.item(0).gross + cash.item(1).gross + cash.item(2).gross + cash.item(3).gross + cash.item(4).gross + cash.item(5).gross + cash.item(6).gross + cash.item(7).gross + cash.item(8).gross + cash.item(9).gross 
+---
+id: asset gather import
+question: |
+  Do you, your spouse, or someone in your household own any of the following?
+subquestion: |
+  Include **all** bank accounts, stocks and bond, trusts, real estate, etc. **Do not** include clothing, furniture, or cars. 
+fields:
+  - no label: assets.asset_types 
+    datatype: checkboxes
+    code: |
+      asset_type_list()
+    exclude: |
+      ['vehicle']
+---
+#if: |
+#  not hasattr(assets[i],'type')
 id: assets
 question: |
-  assets
-subquestion: |
-  asset value and asset type
+  Describe the ${ordinal(i) } asset owned by you and your household members.
 fields:
-  - 'Asset 1': asset_1
-    maxlength: 16
-  - 'Asset value 1': asset_value_1
-    maxlength: 12
-  - 'Asset value 2': asset_value_2
-    maxlength: 12
-  - 'Household with asset 1': household_with_asset_1
-    maxlength: 32
-  - 'Asset 2': asset_2
-    maxlength: 16
-  - 'Asset value 3': asset_value_3
-    maxlength: 12
-  - 'Asset 3': asset_3
-    maxlength: 16
-  - 'Household with asset 4': household_with_asset_4
-    maxlength: 32
-  - 'Asset value 4': asset_value_4
-    maxlength: 24
-  - 'Asset 4': asset_4
-    maxlength: 32
+  - What type of asset is it?: assets[i].type
+    code: |
+      asset_type_list()   
+  - Explain what type of asset this is: assets[i].other_type
+    show if:
+      variable: assets[i].type
+      is: 'other'     
+  - Owner: assets[i].owner
+    datatype: object_radio
+    none of the above: False
+    choices:
+      - showifdef('users[1].name')
+      - showifdef('users[3].name')
+      - showifdef('users[4].name')
+      - showifdef('users[5].name')
+      - showifdef('users[6].name')
+      - showifdef('users[7].name')
+      - showifdef('users[8].name')
+  - Asset Value or Current Balance : assets[i].balance
+    datatype: currency
+    default: 0
+  - Name of Financial Institution: assets[i].institution
+    maxlength: 38
+  - Account Number: assets[i].account
+    maxlength: 42
 ---
-id: financial institution and acct number
+id: review assets
 question: |
-  financial institution and acct number
+  Assets from you and your household members
 subquestion: |
-  Placeholder text
-fields:
-  - 'Financial institution 1': financial_institution_1
-    maxlength: 38
-  - 'Account number 1': account_number_1
-    maxlength: 42
-  - 'Account number 2': account_number_2
-    maxlength: 42
-  - 'Financial institution 2': financial_institution_2
-    maxlength: 38
-  - 'Account number 3': account_number_3
-    maxlength: 42
-  - 'Financial institution 3': financial_institution_3
-    maxlength: 38
-  - 'Household with asset 3': household_with_asset_3
-    maxlength: 32
-  - 'Account number 4': account_number_4
-    maxlength: 42
-  - 'Financial institution 4': financial_institution_4
-    maxlength: 38
+  So far you've told us about ${assets.number()} asset(s).
+  You can add more or click continue to go to the next question.
+  ${ assets.table }
+  ${ assets.add_action() }
+field: review_assets
 ---
-id: Screen 19
+id: assets
+table: assets.table
+rows: assets
+columns:
+  - Owner: |
+      row_item.owner
+  - Type: |
+      asset_type_list()[row_item.type]
+  - Current balance: |
+      currency(row_item.balance)
+  - Financial Institution: |
+      row_item.institution
+  - Account Number: |
+      row_item.account     
+edit:
+  - balance
+---
+id: own prop
 question: |
-  Screen 19
-subquestion: |
-  Placeholder text
-fields:
-  - 'Own property': own_property_yes
-    datatype: yesno
-  - 'Own property': own_property_no
-    datatype: yesno
-  - 'Real estate address': real_estate_address
+  Do you own any real estate?
+yesno: own_property
+--- 
+id: own prop
+question: |
+  Provide the address of the real estate you own
+fields: 
+  - 'no label': real_estate_address
+    input type: area
     maxlength: 104
 ---
-id: sold propert
+id: sold property
 question: |
-  sold propert
-subquestion: |
-  Placeholder text
-fields:
-  - 'Sold property assets': sold_property_assets_no
-    datatype: yesno
-  - 'Sold property assets': sold_property_assets_no
-    datatype: yesno
-  - 'Sold property assets answer': sold_property_assets_answer
-    maxlength: 50
+  Have you sold, transfered or given away any real property or assets in the last three years?
+yesno: sold_property
 ---
-id: sale amount
-question: |
-  sale amount
-subquestion: |
-  if sold in three years
-fields:
+id: sale property details
+question: | 
+  Provide the details about the details about transfer of property or assets
+fields: 
+  - 'Provide the date of sale or transfer': sold_property_assets_answer
+    datatype: date
+    maxlength: 50
   - 'Property sale amount': property_sale_amount
+    datatype: currency 
     maxlength: 13
+    default: 0
   - 'Property value amount': property_value_amount
+    datatype: currency 
     maxlength: 20
+    default: 0
 ---
 id: expenses
 question: |
-  expenses
-subquestion: |
-  Estimate the amount you will spend, if any, on the following categories over the next 12 months.
+  Estimate the amount you will spend, if any, on the following categories over the next 12 months
 fields:
-  - 'Medical expense': medical_expense
-    maxlength: 24
-  - 'Child care': child_care
+  - 'Un-reimbursed Medical expense': medical_expense
+    required: False
+    default: 0
+    datatype: currency 
     maxlength: 24
   - 'Health insurance': health_insurance
+    required: False
+    default: 0
+    datatype: currency 
+    maxlength: 24
+  - 'Child care': child_care
+    required: False
+    default: 0
+    datatype: currency 
+    maxlength: 24
+  - 'Alimony or Child support': child_support
+    required: False
+    default: 0
+    datatype: currency 
     maxlength: 24
   - 'Other home expenses': other_home_expenses
-    maxlength: 24
-  - 'Child support': child_support
+    help: |
+      Care of disabled household member or homemaking and travel expenses for disabled household member) 
+    required: False
+    default: 0
+    datatype: currency 
     maxlength: 24
 ---
-id: housing assistanc
+id: housing assistance
 question: |
-  housing assistanc
-subquestion: |
-  Placeholder text
+  Have you, or any member of your household, ever received housing assitance from MRVP or any other housing agency?
+yesno: housing_assistance_previous
+---
+id: previous agency
+question: |
+  What was the name of the housing agency you or household member recieved housing assistance from in the past?
+fields: 
+  - 'Agency name': housing_assistance_agency
+    maxlength: 128
+--- 
+id: previous agency moveout 
+question: |
+  What date did you or the member of your household who recieved housing assitance in the past moveout? 
+fields: 
+  - 'I do not know the exact date': moveout_date_unknown
+    datatype: yesno
+  - 'Moveout date': housing_assistance_moveout
+    hide if: moveout_date_unknown
+    datatype: date
+    maxlength: 128
+  - 'Moveout date guess': housing_assistance_moveout_guess
+    show if: moveout_date_unknown
+    maxlength: 128
+---
+id: reason moveout 
+question: |
+  Why did you or members of your household moved out of the household with the prior housing agency?
 fields:
-  - 'Housing assistance': housing_assistance_yes
-    datatype: yesno
-  - 'Housing assistance': housing_assistance_no
-    datatype: yesno
-  - 'Housing assistance household head': housing_assistance_household_head
+  - 'no label': moveout_reason
+    input type: area
+    rows: 2
     maxlength: 128
-  - 'Housing assistance agency': housing_assistance_agency
-    maxlength: 128
-  - 'Housing assistance moveout': housing_assistance_moveout
-    maxlength: 128
-  - 'Moveout reason': moveout_reason
-    maxlength: 128
-  - 'Assitance backrent': assitance_backrent_yes
-    datatype: yesno
-  - 'Assitance backrent': assitance_backrent_no
-    datatype: yesno
-  - 'Assitance terminated': assitance_terminated_no
-    datatype: yesno
-  - 'Assitance terminated': assitance_terminated_yes
-    datatype: yesno
-  - 'Assitance backrent explain': assitance_backrent_explain
+---
+id: terminated for cause 
+question: |
+  Were you or any member of your household receiving assistance at the housing agency terminated for cause? 
+yesno: assitance_terminated 
+--- 
+id: backrent 
+question: | 
+  Do you owe any money, back rent or damages to the housing agency? 
+yesno: assitance_backrent
+---
+id: explain termiated 
+question: |
+  You said you or a member of your household was terminated for cause and/or owes money, back rent or damages to the housing agency
+subquestion: |
+  Provide an explaination.
+fields: 
+  - 'no label': assitance_backrent_explain
+    input type: area
+    rows: 2
     maxlength: 132
-  - 'Owe backrent': owe_backrent_yes
-    datatype: yesno
-  - 'Owe backrent': owe_backrent_no
-    datatype: yesno
-  - 'Previous evicted': previous_evicted_yes
-    datatype: yesno
-  - 'Previous evicted': previous_evicted_no
-    datatype: yesno
+---
+id: yes recieved previous assistance - hoh
+question: | 
+  Name of the head of household at the time you recieved housing assitance from MRVP or any other housing agency in the past
+fields: 
+  - 'First and Last Name': housing_assistance_household_head
 ---
 id: criminal history
 question: |
-  criminal history
-subquestion: |
   Have you or any member of your household ever been convicted of a drug or violent crime?
-fields:
-  - 'Convicted': convicted_yes
-    datatype: yesno
-  - 'Convicted': convicted_no
-    datatype: yesno
+field: convicted_crime
+buttons: 
+  - "Yes": True
+  - "No / No Record": False 
+help:
+  label: Can I answer no record? 
+  content: |
+    An applicant for housing may answer "no record":
+
+    * If you have a sealed record on file with the commissioner of probation  relative to prior arrests, criminal court appearances or convictions;
+    
+    * If you have with a sealed record on file with the commissioner of probation relative to prior arrests or criminal court appearances;
+    
+    * If you have a sealed record on file with the commissioner of probation  relative to prior arrests or criminal court appearances
 ---
 id: pending
 question: |
-  pending
-subquestion: |
-  Do you or any member of your household have any criminal matters pending?*
-fields:
-  - 'Pending': pending_yes
-    datatype: yesno
-  - 'Pending': pending_no
-    datatype: yesno
+  Do you or any member of your household have any criminal matters pending?
+field: pending_criminal
+buttons: 
+  - "Yes": True
+  - "No / No Record": False 
+help:
+  label: Can I answer no record? 
+  content: |
+    An applicant for housing may answer "no record":
+
+    * If you have a sealed record on file with the commissioner of probation  relative to prior arrests, criminal court appearances or convictions;
+    
+    * If you have with a sealed record on file with the commissioner of probation relative to prior arrests or criminal court appearances;
+    
+    * If you have a sealed record on file with the commissioner of probation  relative to prior arrests or criminal court appearances
 ---
 id: registry
 question: |
-  registry
-subquestion: |
   Do you or any member of your household have a lifetime requirement to register as a sex offender in the state of Massachusetts?
-fields:
-  - 'Sex offender': sex_offender_yes
-    datatype: yesno
-  - 'Sex offender': sex_offender_no
-    datatype: yesno
-  - 'Criminal record explination': criminal_record_explination
-    maxlength: 154
+field: sex_offender
+buttons: 
+  - "Yes": True
+  - "No / No Record": False 
+help:
+  label: Can I answer no record? 
+  content: |
+    An applicant for housing may answer "no record":
+
+    * If you have a sealed record on file with the commissioner of probation  relative to prior arrests, criminal court appearances or convictions;
+    
+    * If you have with a sealed record on file with the commissioner of probation relative to prior arrests or criminal court appearances;
+    
+    * If you have a sealed record on file with the commissioner of probation  relative to prior arrests or criminal court appearances
 ---
-id: missed fileds
+id: criminal record explanation
+question: | 
+  You answered **yes** to at least one question regarding a criminal record for you or a member of your household. [BR] Provide an explination. 
+subquestion: | 
+  The questions were: [BR]
+  - Have you or any member of your household ever been convicted of a drug or violent crime?[BR]
+   - Do you or any member of your household have any criminal matters pending?[BR]
+   - Do you or any member of your household have a lifetime requirement to register as a sex offender in the state of Massachusetts?
+fields: 
+  - 'no label': criminal_record_explination
+    maxlength: 154
+    input type: area
+    rows: 2
+---
+id: rental history 1
 question: |
-  missed fileds
-subquestion: |
-  Placeholder text
-fields:
-  - 'User1 mobile': user1_mobile
-    maxlength: 48
-  - 'Household4 empoloyer': household4_empoloyer
-    maxlength: 62
-  - 'Household5 empoloyer': household5_empoloyer
-    maxlength: 62
-  - 'Household8 empoloyer': household8_empoloyer
-    maxlength: 62
-  - 'Household with asset 2': household_with_asset_2
-    maxlength: 32
+  Do you owe any previous property owner money for damagers or unpaid rent? 
+yesno: owe_backrent
+--- 
+id: rental history 2 
+question: | 
+  Have you ever been evicted from a rental unit for cause? 
+yesno: previous_evicted 
+---
+id: explain rental history
+question: | 
+  If you owe any previous property owner money for damagers or unpaid rent or were evicted from a rental unit for cause, explain below.
+fields: 
   - 'Explain rental history': explain_rental_history
+    input type: area
+    rows: 2
     maxlength: 152
+---
+id: your address
+question: |
+  What is your address?
+subquestion: |
+  What address should the housing agency use to mail papers to you?
+fields:
+  - Street address: users[0].address.address
+    address autocomplete: True
+  - Unit: users[0].address.unit
+    required: False
+  - City: users[0].address.city
+  - State: users[0].address.state
+    code: |
+      states_list()
+    default: MA      
+  - Zip: users[0].address.zip
+    required: False
+---
+question: |
+  What is your contact information?
+subquestion: |
+  The housing agency needs to be able to reach you.
+  
+  Include at least **one** way to reach you other than by mail.
+fields:  
+  - Mobile number: users[0].mobile_number
+    required: False
+  - Other phone number: users[0].phone_number
+    required: False
+  - Email address: users[0].email    
+    datatype: email
+    required: False
+    help: |
+      If you do not have a phone number or email the housing agency can use, provide
+      specific contact instructions. For example, use a friend's phone number.
+      But the friend must be someone you can rely on to tell you the housing agency is trying to reach you.
+validation code: |
+  if (not showifdef('users[0].phone_number')) and \
+      (not showifdef('users[0].mobile_number')) and \
+      (not showifdef('users[0].email')):
+    validation_error(word("You need to provide at least one contact method."))
+help: |
+  The court **must** be able to reach you. So you have to give them some way to do this.
+  
+  Some forms allow you to tell the court you need to keep your address, phone,
+  and email confidential, so that only court staff can see this information. 
 ---
 progress: 100
 mandatory: True
-id: Your form is ready to download and file
+id: Your form is ready to download
 question: |
   Your form is ready to download and file
 subquestion: |
-  Thank you ${users}. Your form is ready to download and deliver.
+  Thank you ${users[0].name}. Your form is ready to download. Below is a preview of your form.
   
-  Below is a preview of your form.
+  Next steps:
   
+    Contact the local housing agency in the area in which you wish to reside to check the status of the agency’s waiting list, open or closed. Applications may be made where waiting lists are open. Not all agencies administer both the Mobile and Project Based programs. Please use the [Service Locator](https://hedfuel.azurewebsites.net/) to find the Local Housing Authority Closest to you.
+
   ${pdf_concatenate(RentalVoucher_attachment['final'], filename='RentalVoucher.pdf') }
+
 need: RentalVoucher
 attachment code: RentalVoucher_attachment['final']
 ---
 objects:
   - RentalVoucher_attachment: DADict
 ---
+id: attachment block
 attachment:
     variable name: RentalVoucher_attachment[i]
     name: Massachusetts Rental Voucher Program
@@ -671,156 +1274,217 @@ attachment:
     skip undefined: True
     pdf template file: MRV.pdf
     fields: 
-      - "user1_name": ${ str(users[0]) }
-      - "user1_address_street": ${ users[0].address.address }
-      - "user1_address_street2": ${ users[0].address.unit }
-      - "user1_address_city": ${ users[0].address.city }
-      - "user1_address_state": ${ users[0].address.state }
-      - "user1_address_zip": ${ users[0].address.zip }
-      - "user1_phone": ${ users[0].phone_number }
-      - "user1_email": ${ users[0].email }
+      - "user0_name": ${ str(users[0]) }
+      - "user0_address_street": ${ users[0].address.address }
+      - "user0_address_street2": ${ users[0].address.unit }
+      - "user0_address_city": ${ users[0].address.city }
+      - "user0_address_state": ${ users[0].address.state }
+      - "user0_address_zip": ${ users[0].address.zip }
+      - "user0_phone_number": ${ users[0].phone_number }
+      - "user0_mobile": ${ users[0].mobile_number }
+      - "user0_email": ${ users[0].email }
       # If it is a signature, test which file version we're expecting. leave it empty unless it's the final attachment version
-      - "user1_signature": ${ users[0].signature if i == 'final' else '' }
-      - "signature_date": ${ signature_date }
-      - "user1_mobile": ${ user1_mobile }
+      
       - "household1_ethnic": ${ household1_ethnic }
-      - "household1_race": ${ household1_race }
-      - "household1_name__1": ${ household1_name }
-      - "household1_birthdate": ${ household1_birthdate }
+      - "household1_race": |
+          % if household1_race == 'Other': 
+          ${ race1_other }
+          % else:
+          ${ household1_race }
+          % endif
+# head of household 
+      - "user1_name__1": ${ str(users[1]) }
+      - "household1_birthdate": ${format_date(household1_birthdate, format='MM/dd/yyyy')  }
       - "household1_sex": ${ household1_sex }
       - "household1_ssn": ${ household1_ssn }
-      - "household2_name__1": ${ household2_name }
-      - "household2_birthdate": ${ household2_birthdate }
+# person 2 
+      - "user2_name__1": |
+          % if house_count >= 2:
+          ${ str(users[3]) }
+          % endif
+      - "household2_birthdate": ${format_date(household2_birthdate, format='MM/dd/yyyy')  }
       - "household2_relationship": ${ household2_relationship }
       - "household2_ethnic": ${ household2_ethnic }
       - "household2_sex": ${ household2_sex }
       - "household2_ssn": ${ household2_ssn }
-      - "household2_race": ${ household2_race }
-      - "household3_name__1": ${ household3_name }
-      - "household3_birthdate": ${ household3_birthdate }
+      - "household2_race": |
+          % if household2_race == 'Other': 
+          ${ race2_other }
+          % else:
+          ${ household2_race }
+          % endif
+# person 3
+      - "user3_name__1": |
+          % if house_count >= 3:
+          ${ str(users[4]) }
+          % endif
+      - "household3_birthdate": ${format_date(household3_birthdate, format='MM/dd/yyyy')  }
       - "household3_relationship": ${ household3_relationship }
       - "household3_ethnic": ${ household3_ethnic }
       - "household3_sex": ${ household3_sex }
       - "household3_ssn": ${ household3_ssn }
-      - "household3_race": ${ household3_race }
-      - "household4_name__1": ${ household4_name }
+      - "household3_race": |
+          % if household3_race == 'Other': 
+          ${ race3_other }
+          % else:
+          ${ household3_race }
+          % endif
+# person 4
+      - "user4_name__1": |
+          % if house_count >= 4:
+          ${ str(users[5]) }
+          % endif
       - "household4_ethnic": ${ household4_ethnic }
       - "household4_relationship": ${ household4_relationship }
-      - "household4_race": ${ household4_race }
+      - "household4_race": |
+          % if household4_race == 'Other': 
+          ${ race4_other }
+          % else:
+          ${ household4_race }
+          % endif
       - "household4_sex": ${ household4_sex }
       - "household4_ssn": ${ household4_ssn }
-      - "household4_birthdate": ${ household4_birthdate }
-      - "household5_name__1": ${ household5_name }
+      - "household4_birthdate": ${format_date(household4_birthdate, format='MM/dd/yyyy')  }
+# person 5
+      - "user5_name__1": |
+          % if house_count >= 5:
+          ${ str(users[6]) }
+          % endif
       - "household5_ethnic": ${ household5_ethnic }
       - "household5_relationship": ${ household5_relationship }
-      - "household5_race": ${ household5_race }
+      - "household5_race": |
+          % if household5_race == 'Other': 
+          ${ race5_other }
+          % else:
+          ${ household5_race }
+          % endif
       - "household5_sex": ${ household5_sex }
       - "household5_ssn": ${ household5_ssn }
-      - "household5_birthdate": ${ household5_birthdate }
-      - "household6_name__1": ${ household6_name }
+      - "household5_birthdate": ${format_date(household5_birthdate, format='MM/dd/yyyy')  }
+# person 6
+      - "user6_name__1": |
+          % if house_count >= 6:
+          ${ str(users[7]) }
+          % endif
       - "household6_ethnic": ${ household6_ethnic }
       - "household6_sex": ${ household6_sex }
       - "household6_relationship": ${ household6_relationship }
       - "household6_ssn": ${ household6_ssn }
-      - "household6_race": ${ household6_race }
-      - "household6_birthdate": ${ household6_birthdate }
-      - "household7_name__1": ${ household7_name }
-      - "household7_birthdate": ${ household7_birthdate }
+      - "household6_race": |
+          % if household6_race == 'Other': 
+          ${ race6_other }
+          % else:
+          ${ household6_race }
+          % endif
+      - "household6_birthdate": ${format_date(household6_birthdate, format='MM/dd/yyyy')  }
+# person 7 
+      - "user7_name__1": |
+          % if house_count >= 7:
+          ${ str(users[8]) }
+          % endif
+      - "household7_birthdate": ${format_date(household7_birthdate, format='MM/dd/yyyy')  }
       - "household7_sex": ${ household7_sex }
       - "household7_ssn": ${ household7_ssn }
       - "household7_relationship": ${ household7_relationship }
       - "household7_ethnic": ${ household7_ethnic }
-      - "household7_race": ${ household7_race }
-      - "no_understand_english": ${ no_understand_english }
-      - "yes_understand_english": ${ yes_understand_english }
+      - "household7_race": |
+          % if household7_race == 'Other': 
+          ${ race7_other }
+          % else:
+          ${ household7_race }
+          % endif
+      - "no_understand_english": ${ not understand_english }
+      - "yes_understand_english": ${ understand_english }
       - "primary_spoken_language": ${ primary_spoken_language }
       - "primary_written_language": ${ primary_written_language }
-      - "immediate_threat": ${ immediate_threat }
+      - "immediate_threat": ${ without_home or immediate_threat }
       - "not_contributed_to_situation": ${ not_contributed_to_situation }
       - "reasonable_efforts": ${ reasonable_efforts }
       - "displaced_resdidence": ${ displaced_resdidence }
-      - "displaced_no_fault": ${ displaced_no_fault }
-      - "displaced_medical": ${ displaced_medical }
-      - "displaced_domestic_violence": ${ displaced_domestic_violence }
-      - "displaced_natural_forces": ${ displaced_natural_forces }
-      - "displaced_public_action_1": ${ displaced_public_action_1 }
-      - "displaced_public_action_2": ${ displaced_public_action_2 }
-      - "reside_application_town_yes": ${ reside_application_town_yes }
-      - "reside_application_town_no": ${ reside_application_town_no }
-      - "work_application_town_yes": ${ work_application_town_yes }
-      - "work_application_town_no": ${ work_application_town_no }
-      - "child_school_application_town_yes": ${ child_school_application_town_yes }
-      - "child_school_application_town_no": ${ child_school_application_town_no }
-      - "special_needs_yes": ${ special_needs_yes }
-      - "special_needs_no": ${ special_needs_no }
+      - "displaced_no_fault": ${ homelessness_displacement == 'displaced_no_fault' }
+      - "displaced_medical": ${ homelessness_displacement ==  'displaced_medical' }
+      - "displaced_domestic_violence": ${ 'displaced_domestic_violence' }
+      - "displaced_natural_forces": ${ homelessness_displacement == 'displaced_natural_forces' }
+      - "displaced_public_action_1": ${ homelessness_displacement == 'displaced_public_action_1' }
+      - "displaced_public_action_2": ${ homelessness_displacement == 'displaced_public_action_2' }
+      - "reside_application_town_yes": ${ reside_application }
+      - "reside_application_town_no": ${ not reside_application }
+      - "work_application_town_yes": ${ work_application }
+      - "work_application_town_no": ${ not work_application }
+      - "child_school_application_town_yes": ${ child_school_application }
+      - "child_school_application_town_no": ${ not child_school_application }
+      - "special_needs_yes": ${ special_needs }
+      - "special_needs_no": ${ not special_needs } 
       - "special_needs_info": ${ special_needs_info }
-      - "emergency_contact": ${ emergency_contact }
+
+#emergency contact
+      - "emergency_contact": ${ str(users[2]) }
       - "emergency_contact_relationship": ${ emergency_contact_relationship }
-      - "emergency_address": ${ emergency_address }
-      - "emergency_address2": ${ emergency_address2 }
-      - "emergency_address_city": ${ emergency_address_city }
-      - "emergency_address_state": ${ emergency_address_state }
-      - "emergency_address_zip": ${ emergency_address_zip }
-      - "emergency_mobile": ${ emergency_mobile }
-      - "emergency_phone": ${ emergency_phone }
-      - "emergency_email": ${ emergency_email }
-      - "household1_gross": ${ household1_gross }
-      - "household1_name__2": ${ household1_name }
-      - "household1_employer": ${ household1_employer }
-      - "household2_gross": ${ household2_gross }
-      - "household2_name__2": ${ household2_name }
-      - "household2_employer": ${ household2_employer }
-      - "household3_gross": ${ household3_gross }
-      - "household3_name__2": ${ household3_name }
-      - "household3_employer": ${ household3_employer }
-      - "household4_gross": ${ household4_gross }
-      - "household4_name__2": ${ household4_name }
-      - "household4_empoloyer": ${ household4_empoloyer }
-      - "household5_gross": ${ household5_gross }
-      - "household5_name__2": ${ household5_name }
-      - "household5_empoloyer": ${ household5_empoloyer }
-      - "household6_gross": ${ household6_gross }
-      - "household6_name__2": ${ household6_name }
-      - "household6_employer": ${ household6_employer }
-      - "household7_gross": ${ household7_gross }
-      - "household7_name__2": ${ household7_name }
-      - "household7_employer": ${ household7_employer }
-      - "household8_gross": ${ household8_gross }
-      - "household8_name__2": ${ household8_name }
-      - "household8_empoloyer": ${ household8_empoloyer }
-      - "household9_gross": ${ household9_gross }
-      - "household9_name__2": ${ household9_name }
-      - "household9_employer": ${ household9_employer }
-      - "household10_gross": ${ household10_gross }
-      - "household10_name__2": ${ household10_name }
-      - "household10_employer": ${ household10_employer }
-      - "total_gross_income": ${ total_gross_income }
-      - "asset_1": ${ asset_1 }
-      - "asset_value_1": ${ asset_value_1 }
-      - "financial_institution_1": ${ financial_institution_1 }
-      - "account_number_1": ${ account_number_1 }
-      - "asset_value_2": ${ asset_value_2 }
-      - "household_with_asset_1": ${ household_with_asset_1 }
-      - "asset_2": ${ asset_2 }
-      - "account_number_2": ${ account_number_2 }
-      - "financial_institution_2": ${ financial_institution_2 }
-      - "household_with_asset_2": ${ household_with_asset_2 }
-      - "asset_value_3": ${ asset_value_3 }
-      - "asset_3": ${ asset_3 }
-      - "account_number_3": ${ account_number_3 }
-      - "financial_institution_3": ${ financial_institution_3 }
-      - "household_with_asset_3": ${ household_with_asset_3 }
-      - "account_number_4": ${ account_number_4 }
-      - "household_with_asset_4": ${ household_with_asset_4 }
-      - "asset_value_4": ${ asset_value_4 }
-      - "financial_institution_4": ${ financial_institution_4 }
-      - "asset_4": ${ asset_4 }
-      - "own_property_yes": ${ own_property_yes }
-      - "own_property_no": ${ own_property_no }
+      - "user1_address_street": ${ users[2].address.address }
+      - "user1_address_street2": ${ users[2].address.unit }
+      - "user1_address_city": ${ users[2].address.city }
+      - "user1_address_state": ${ users[2].address.state }
+      - "user1_address_zip": ${ users[2].address.zip }
+      - "emergency_mobile": ${ users[2].mobile_number }
+      - "emergency_phone": ${ users[2].phone_number }
+      - "emergency_email": ${ users[2].email  }
+      - "household1_gross": ${ cash.item(0).gross }
+      - "household1_employed": ${ cash[0].earner }
+      - "household1_employer": ${ cash.item(0).source }
+      - "household2_gross": ${ cash.item(1).gross }
+      - "household2_employed": ${ cash[1].earner }
+      - "household2_employer": ${ cash.item(1).source }
+      - "household3_gross": ${ cash.item(2).gross }
+      - "household3_employed": ${ cash[2].earner }
+      - "household3_employer": ${ cash.item(2).source }
+      - "household4_gross": ${ cash.item(3).gross }
+      - "household4_employed": ${ cash[3].earner }
+      - "household4_employer": ${ cash.item(3).source }
+      - "household5_gross": ${ cash.item(4).gross }
+      - "household5_employed": ${ cash[4].earner }
+      - "household5_employer": ${ cash.item(4).source }
+      - "household6_gross": ${ cash.item(5).gross }
+      - "household6_employed": ${ cash[5].earner }
+      - "household6_employer": ${ cash.item(5).source }
+      - "household7_gross": ${ cash.item(6).gross }
+      - "household7_employed": ${ cash[6].earner }
+      - "household7_employer": ${ cash.item(6).source }
+      - "household8_gross": ${ cash.item(7).gross }
+      - "household8_employed": ${ cash[7].earner }
+      - "household8_employer": ${ cash.item(7).source }
+      - "household9_gross": ${ cash.item(8).gross }
+      - "household9_employed": ${ cash[8].earner }
+      - "household9_employer": ${ cash.item(8).source }
+      - "household10_gross": ${ cash.item(9).gross }
+      - "household10_employed": ${ cash[9].earner }
+      - "household10_employer": ${ cash.item(9).source }
+      - "total_gross_income": ${ currency(total_gross_income) }
+      - "asset_1": ${ assets.item(0).type }
+      - "asset_value_1": ${ assets.item(0).balance  }
+      - "financial_institution_1": ${ assets.item(0).institution }
+      - "account_number_1": ${ assets.item(0).account }
+      - "asset_value_2": ${ assets.item(1).balance  }
+      - "household_with_asset_1": ${ assets[0].owner }
+      - "asset_2": ${  assets.item(1).type }
+      - "account_number_2": ${ assets.item(1).account  }
+      - "financial_institution_2": ${ assets.item(1).institution }
+      - "household_with_asset_2": ${ assets[1].owner }
+      - "asset_value_3": ${ assets.item(2).balance  }
+      - "asset_3": ${  assets.item(2).type }
+      - "account_number_3": ${ assets.item(2).account  }
+      - "financial_institution_3": ${ assets.item(2).institution }
+      - "household_with_asset_3": ${ assets[2].owner }
+      - "account_number_4": ${ assets.item(3).account  }
+      - "household_with_asset_4": ${ assets[3].owner }
+      - "asset_value_4": ${ assets.item(3).balance }
+      - "financial_institution_4": ${ assets.item(3).institution }
+      - "asset_4": ${ assets.item(3).type }
+      - "own_property_yes": ${ own_property }
+      - "own_property_no": ${ not own_property }
       - "real_estate_address": ${ real_estate_address }
-      - "sold_property_assets_no": ${ sold_property_assets_no }
-      - "sold_property_assets_no": ${ sold_property_assets_no }
-      - "sold_property_assets_answer": ${ sold_property_assets_answer }
+      - "sold_property_assets_no": ${ not sold_property }
+      - "sold_property_assets_yes": ${ sold_property }
+      - "sold_property_assets_answer": ${ format_date(sold_property_assets_answer, format='MM/dd/yyyy') }
       - "property_sale_amount": ${ property_sale_amount }
       - "property_value_amount": ${ property_value_amount }
       - "medical_expense": ${ medical_expense }
@@ -828,718 +1492,47 @@ attachment:
       - "health_insurance": ${ health_insurance }
       - "other_home_expenses": ${ other_home_expenses }
       - "child_support": ${ child_support }
-      - "housing_assistance_yes": ${ housing_assistance_yes }
-      - "housing_assistance_no": ${ housing_assistance_no }
+      - "housing_assistance_yes": ${ housing_assistance_previous }
+      - "housing_assistance_no": ${ not housing_assistance_previous }
       - "housing_assistance_household_head": ${ housing_assistance_household_head }
       - "housing_assistance_agency": ${ housing_assistance_agency }
-      - "housing_assistance_moveout": ${ housing_assistance_moveout }
+      - "housing_assistance_moveout": |
+          % if moveout_date_unknown: 
+          ${ housing_assistance_moveout_guess }
+          % else: 
+          ${ format_date(housing_assistance_moveout, format='MM/dd/yyy') }  
+          % endif
       - "moveout_reason": ${ moveout_reason }
-      - "assitance_backrent_yes": ${ assitance_backrent_yes }
-      - "assitance_backrent_no": ${ assitance_backrent_no }
-      - "assitance_terminated_no": ${ assitance_terminated_no }
-      - "assitance_terminated_yes": ${ assitance_terminated_yes }
+      - "assitance_backrent_yes": ${ assitance_backrent }
+      - "assitance_backrent_no": ${ not assitance_backrent }
+      - "assitance_terminated_no": ${ not assitance_terminated }
+      - "assitance_terminated_yes": ${ assitance_terminated }
       - "assitance_backrent_explain": ${ assitance_backrent_explain }
-      - "owe_backrent_yes": ${ owe_backrent_yes }
-      - "owe_backrent_no": ${ owe_backrent_no }
-      - "previous_evicted_yes": ${ previous_evicted_yes }
-      - "previous_evicted_no": ${ previous_evicted_no }
+      - "owe_backrent_yes": ${ owe_backrent }
+      - "owe_backrent_no": ${ not owe_backrent }
+      - "previous_evicted_yes": ${ previous_evicted }
+      - "previous_evicted_no": ${ not previous_evicted }
       - "explain_rental_history": ${ explain_rental_history }
-      - "convicted_yes": ${ convicted_yes }
-      - "pending_yes": ${ pending_yes }
-      - "convicted_no": ${ convicted_no }
-      - "pending_no": ${ pending_no }
-      - "sex_offender_yes": ${ sex_offender_yes }
-      - "sex_offender_no": ${ sex_offender_no }
+      - "convicted_yes": ${ convicted_crime }
+      - "convicted_no": ${ not convicted_crime }
+      - "pending_yes": ${ pending_criminal }
+      - "pending_no": ${ not pending_criminal }
+      - "sex_offender_yes": ${ sex_offender }
+      - "sex_offender_no": ${ not sex_offender }
       - "criminal_record_explination": ${ criminal_record_explination }
----
-id: RentalVoucher review screen
-event: review_RentalVoucher
-question: |
-  Placeholder Review Screen
-subquestion: |
-  Edit your answers below
-review: 
-  - Edit: user1_mobile
-    button: |
-      User1 mobile:
-      ${ user1_mobile }
-  - Edit: household1_ethnic
-    button: |
-      Household1 ethnic:
-      ${ household1_ethnic }
-  - Edit: household1_race
-    button: |
-      Household1 race:
-      ${ household1_race }
-  - Edit: household1_name
-    button: |
-      Household1 name  1:
-      ${ household1_name }
-  - Edit: household1_birthdate
-    button: |
-      Household1 birthdate:
-      ${ household1_birthdate }
-  - Edit: household1_sex
-    button: |
-      Household1 sex:
-      ${ household1_sex }
-  - Edit: household1_ssn
-    button: |
-      Household1 ssn:
-      ${ household1_ssn }
-  - Edit: household2_name
-    button: |
-      Household2 name  1:
-      ${ household2_name }
-  - Edit: household2_birthdate
-    button: |
-      Household2 birthdate:
-      ${ household2_birthdate }
-  - Edit: household2_relationship
-    button: |
-      Household2 relationship:
-      ${ household2_relationship }
-  - Edit: household2_ethnic
-    button: |
-      Household2 ethnic:
-      ${ household2_ethnic }
-  - Edit: household2_sex
-    button: |
-      Household2 sex:
-      ${ household2_sex }
-  - Edit: household2_ssn
-    button: |
-      Household2 ssn:
-      ${ household2_ssn }
-  - Edit: household2_race
-    button: |
-      Household2 race:
-      ${ household2_race }
-  - Edit: household3_name
-    button: |
-      Household3 name  1:
-      ${ household3_name }
-  - Edit: household3_birthdate
-    button: |
-      Household3 birthdate:
-      ${ household3_birthdate }
-  - Edit: household3_relationship
-    button: |
-      Household3 relationship:
-      ${ household3_relationship }
-  - Edit: household3_ethnic
-    button: |
-      Household3 ethnic:
-      ${ household3_ethnic }
-  - Edit: household3_sex
-    button: |
-      Household3 sex:
-      ${ household3_sex }
-  - Edit: household3_ssn
-    button: |
-      Household3 ssn:
-      ${ household3_ssn }
-  - Edit: household3_race
-    button: |
-      Household3 race:
-      ${ household3_race }
-  - Edit: household4_name
-    button: |
-      Household4 name  1:
-      ${ household4_name }
-  - Edit: household4_ethnic
-    button: |
-      Household4 ethnic:
-      ${ household4_ethnic }
-  - Edit: household4_relationship
-    button: |
-      Household4 relationship:
-      ${ household4_relationship }
-  - Edit: household4_race
-    button: |
-      Household4 race:
-      ${ household4_race }
-  - Edit: household4_sex
-    button: |
-      Household4 sex:
-      ${ household4_sex }
-  - Edit: household4_ssn
-    button: |
-      Household4 ssn:
-      ${ household4_ssn }
-  - Edit: household4_birthdate
-    button: |
-      Household4 birthdate:
-      ${ household4_birthdate }
-  - Edit: household5_name
-    button: |
-      Household5 name  1:
-      ${ household5_name }
-  - Edit: household5_ethnic
-    button: |
-      Household5 ethnic:
-      ${ household5_ethnic }
-  - Edit: household5_relationship
-    button: |
-      Household5 relationship:
-      ${ household5_relationship }
-  - Edit: household5_race
-    button: |
-      Household5 race:
-      ${ household5_race }
-  - Edit: household5_sex
-    button: |
-      Household5 sex:
-      ${ household5_sex }
-  - Edit: household5_ssn
-    button: |
-      Household5 ssn:
-      ${ household5_ssn }
-  - Edit: household5_birthdate
-    button: |
-      Household5 birthdate:
-      ${ household5_birthdate }
-  - Edit: household6_name
-    button: |
-      Household6 name  1:
-      ${ household6_name }
-  - Edit: household6_ethnic
-    button: |
-      Household6 ethnic:
-      ${ household6_ethnic }
-  - Edit: household6_sex
-    button: |
-      Household6 sex:
-      ${ household6_sex }
-  - Edit: household6_relationship
-    button: |
-      Household6 relationship:
-      ${ household6_relationship }
-  - Edit: household6_ssn
-    button: |
-      Household6 ssn:
-      ${ household6_ssn }
-  - Edit: household6_race
-    button: |
-      Household6 race:
-      ${ household6_race }
-  - Edit: household6_birthdate
-    button: |
-      Household6 birthdate:
-      ${ household6_birthdate }
-  - Edit: household7_name
-    button: |
-      Household7 name  1:
-      ${ household7_name }
-  - Edit: household7_birthdate
-    button: |
-      Household7 birthdate:
-      ${ household7_birthdate }
-  - Edit: household7_sex
-    button: |
-      Household7 sex:
-      ${ household7_sex }
-  - Edit: household7_ssn
-    button: |
-      Household7 ssn:
-      ${ household7_ssn }
-  - Edit: household7_relationship
-    button: |
-      Household7 relationship:
-      ${ household7_relationship }
-  - Edit: household7_ethnic
-    button: |
-      Household7 ethnic:
-      ${ household7_ethnic }
-  - Edit: household7_race
-    button: |
-      Household7 race:
-      ${ household7_race }
-  - Edit: no_understand_english
-    button: |
-      No understand english:
-      ${ word(yesno(no_understand_english)) }
-  - Edit: yes_understand_english
-    button: |
-      Yes understand english:
-      ${ word(yesno(yes_understand_english)) }
-  - Edit: primary_spoken_language
-    button: |
-      Primary spoken language:
-      ${ primary_spoken_language }
-  - Edit: primary_written_language
-    button: |
-      Primary written language:
-      ${ primary_written_language }
-  - Edit: immediate_threat
-    button: |
-      Immediate threat:
-      ${ word(yesno(immediate_threat)) }
-  - Edit: not_contributed_to_situation
-    button: |
-      Not contributed to situation:
-      ${ word(yesno(not_contributed_to_situation)) }
-  - Edit: reasonable_efforts
-    button: |
-      Reasonable efforts:
-      ${ word(yesno(reasonable_efforts)) }
-  - Edit: displaced_resdidence
-    button: |
-      Displaced resdidence:
-      ${ word(yesno(displaced_resdidence)) }
-  - Edit: displaced_no_fault
-    button: |
-      Displaced no fault:
-      ${ word(yesno(displaced_no_fault)) }
-  - Edit: displaced_medical
-    button: |
-      Displaced medical:
-      ${ word(yesno(displaced_medical)) }
-  - Edit: displaced_domestic_violence
-    button: |
-      Displaced domestic violence:
-      ${ word(yesno(displaced_domestic_violence)) }
-  - Edit: displaced_natural_forces
-    button: |
-      Displaced natural forces:
-      ${ word(yesno(displaced_natural_forces)) }
-  - Edit: displaced_public_action_1
-    button: |
-      Displaced public action 1:
-      ${ word(yesno(displaced_public_action_1)) }
-  - Edit: displaced_public_action_2
-    button: |
-      Displaced public action 2:
-      ${ word(yesno(displaced_public_action_2)) }
-  - Edit: reside_application_town_yes
-    button: |
-      Reside application town:
-      ${ word(yesno(reside_application_town_yes)) }
-  - Edit: reside_application_town_no
-    button: |
-      Reside application town:
-      ${ word(yesno(reside_application_town_no)) }
-  - Edit: work_application_town_yes
-    button: |
-      Work application town:
-      ${ word(yesno(work_application_town_yes)) }
-  - Edit: work_application_town_no
-    button: |
-      Work application town:
-      ${ word(yesno(work_application_town_no)) }
-  - Edit: child_school_application_town_yes
-    button: |
-      Child school application town:
-      ${ word(yesno(child_school_application_town_yes)) }
-  - Edit: child_school_application_town_no
-    button: |
-      Child school application town:
-      ${ word(yesno(child_school_application_town_no)) }
-  - Edit: special_needs_yes
-    button: |
-      Special needs:
-      ${ word(yesno(special_needs_yes)) }
-  - Edit: special_needs_no
-    button: |
-      Special needs:
-      ${ word(yesno(special_needs_no)) }
-  - Edit: special_needs_info
-    button: |
-      Special needs info:
-      ${ special_needs_info }
-  - Edit: emergency_contact
-    button: |
-      Emergency contact:
-      ${ emergency_contact }
-  - Edit: emergency_contact_relationship
-    button: |
-      Emergency contact relationship:
-      ${ emergency_contact_relationship }
-  - Edit: emergency_address
-    button: |
-      Emergency address:
-      ${ emergency_address }
-  - Edit: emergency_address2
-    button: |
-      Emergency address2:
-      ${ emergency_address2 }
-  - Edit: emergency_address_city
-    button: |
-      Emergency address city:
-      ${ emergency_address_city }
-  - Edit: emergency_address_state
-    button: |
-      Emergency address state:
-      ${ emergency_address_state }
-  - Edit: emergency_address_zip
-    button: |
-      Emergency address zip:
-      ${ emergency_address_zip }
-  - Edit: emergency_mobile
-    button: |
-      Emergency mobile:
-      ${ emergency_mobile }
-  - Edit: emergency_phone
-    button: |
-      Emergency phone:
-      ${ emergency_phone }
-  - Edit: emergency_email
-    button: |
-      Emergency email:
-      ${ emergency_email }
-  - Edit: household1_gross
-    button: |
-      Gross income 1:
-      ${ household1_gross }
-  - Edit: household1_employer
-    button: |
-      Household1 employer:
-      ${ household1_employer }
-  - Edit: household2_gross
-    button: |
-      Household2 gross:
-      ${ household2_gross }
-  - Edit: household2_employer
-    button: |
-      Household2 employer:
-      ${ household2_employer }
-  - Edit: household3_gross
-    button: |
-      Household3 gross:
-      ${ household3_gross }
-  - Edit: household3_employer
-    button: |
-      Household3 employer:
-      ${ household3_employer }
-  - Edit: household4_gross
-    button: |
-      Household4 gross:
-      ${ household4_gross }
-  - Edit: household4_empoloyer
-    button: |
-      Household4 empoloyer:
-      ${ household4_empoloyer }
-  - Edit: household5_gross
-    button: |
-      Household5 gross:
-      ${ household5_gross }
-  - Edit: household5_empoloyer
-    button: |
-      Household5 empoloyer:
-      ${ household5_empoloyer }
-  - Edit: household6_gross
-    button: |
-      Household6 gross:
-      ${ household6_gross }
-  - Edit: household6_employer
-    button: |
-      Household6 employer:
-      ${ household6_employer }
-  - Edit: household7_gross
-    button: |
-      Household7 gross:
-      ${ household7_gross }
-  - Edit: household7_employer
-    button: |
-      Household7 employer:
-      ${ household7_employer }
-  - Edit: household8_gross
-    button: |
-      Household8 gross:
-      ${ household8_gross }
-  - Edit: household8_name
-    button: |
-      Household8 name  2:
-      ${ household8_name }
-  - Edit: household8_empoloyer
-    button: |
-      Household8 empoloyer:
-      ${ household8_empoloyer }
-  - Edit: household9_gross
-    button: |
-      Household9 gross:
-      ${ household9_gross }
-  - Edit: household9_name
-    button: |
-      Household9 name  2:
-      ${ household9_name }
-  - Edit: household9_employer
-    button: |
-      Household9 employer:
-      ${ household9_employer }
-  - Edit: household10_gross
-    button: |
-      Household10 gross:
-      ${ household10_gross }
-  - Edit: household10_name
-    button: |
-      Household10 name  2:
-      ${ household10_name }
-  - Edit: household10_employer
-    button: |
-      Household10 employer:
-      ${ household10_employer }
-  - Edit: total_gross_income
-    button: |
-      Total gross income:
-      ${ total_gross_income }
-  - Edit: asset_1
-    button: |
-      Asset 1:
-      ${ asset_1 }
-  - Edit: asset_value_1
-    button: |
-      Asset value 1:
-      ${ asset_value_1 }
-  - Edit: financial_institution_1
-    button: |
-      Financial institution 1:
-      ${ financial_institution_1 }
-  - Edit: account_number_1
-    button: |
-      Account number 1:
-      ${ account_number_1 }
-  - Edit: asset_value_2
-    button: |
-      Asset value 2:
-      ${ asset_value_2 }
-  - Edit: household_with_asset_1
-    button: |
-      Household with asset 1:
-      ${ household_with_asset_1 }
-  - Edit: asset_2
-    button: |
-      Asset 2:
-      ${ asset_2 }
-  - Edit: account_number_2
-    button: |
-      Account number 2:
-      ${ account_number_2 }
-  - Edit: financial_institution_2
-    button: |
-      Financial institution 2:
-      ${ financial_institution_2 }
-  - Edit: household_with_asset_2
-    button: |
-      Household with asset 2:
-      ${ household_with_asset_2 }
-  - Edit: asset_value_3
-    button: |
-      Asset value 3:
-      ${ asset_value_3 }
-  - Edit: asset_3
-    button: |
-      Asset 3:
-      ${ asset_3 }
-  - Edit: account_number_3
-    button: |
-      Account number 3:
-      ${ account_number_3 }
-  - Edit: financial_institution_3
-    button: |
-      Financial institution 3:
-      ${ financial_institution_3 }
-  - Edit: household_with_asset_3
-    button: |
-      Household with asset 3:
-      ${ household_with_asset_3 }
-  - Edit: account_number_4
-    button: |
-      Account number 4:
-      ${ account_number_4 }
-  - Edit: household_with_asset_4
-    button: |
-      Household with asset 4:
-      ${ household_with_asset_4 }
-  - Edit: asset_value_4
-    button: |
-      Asset value 4:
-      ${ asset_value_4 }
-  - Edit: financial_institution_4
-    button: |
-      Financial institution 4:
-      ${ financial_institution_4 }
-  - Edit: asset_4
-    button: |
-      Asset 4:
-      ${ asset_4 }
-  - Edit: own_property_yes
-    button: |
-      Own property:
-      ${ word(yesno(own_property_yes)) }
-  - Edit: own_property_no
-    button: |
-      Own property:
-      ${ word(yesno(own_property_no)) }
-  - Edit: real_estate_address
-    button: |
-      Real estate address:
-      ${ real_estate_address }
-  - Edit: sold_property_assets_no
-    button: |
-      Sold property assets:
-      ${ word(yesno(sold_property_assets_no)) }
-  - Edit: sold_property_assets_answer
-    button: |
-      Sold property assets answer:
-      ${ sold_property_assets_answer }
-  - Edit: property_sale_amount
-    button: |
-      Property sale amount:
-      ${ property_sale_amount }
-  - Edit: property_value_amount
-    button: |
-      Property value amount:
-      ${ property_value_amount }
-  - Edit: medical_expense
-    button: |
-      Medical expense:
-      ${ medical_expense }
-  - Edit: child_care
-    button: |
-      Child care:
-      ${ child_care }
-  - Edit: health_insurance
-    button: |
-      Health insurance:
-      ${ health_insurance }
-  - Edit: other_home_expenses
-    button: |
-      Other home expenses:
-      ${ other_home_expenses }
-  - Edit: child_support
-    button: |
-      Child support:
-      ${ child_support }
-  - Edit: housing_assistance_yes
-    button: |
-      Housing assistance:
-      ${ word(yesno(housing_assistance_yes)) }
-  - Edit: housing_assistance_no
-    button: |
-      Housing assistance:
-      ${ word(yesno(housing_assistance_no)) }
-  - Edit: housing_assistance_household_head
-    button: |
-      Housing assistance household head:
-      ${ housing_assistance_household_head }
-  - Edit: housing_assistance_agency
-    button: |
-      Housing assistance agency:
-      ${ housing_assistance_agency }
-  - Edit: housing_assistance_moveout
-    button: |
-      Housing assistance moveout:
-      ${ housing_assistance_moveout }
-  - Edit: moveout_reason
-    button: |
-      Moveout reason:
-      ${ moveout_reason }
-  - Edit: assitance_backrent_yes
-    button: |
-      Assitance backrent:
-      ${ word(yesno(assitance_backrent_yes)) }
-  - Edit: assitance_backrent_no
-    button: |
-      Assitance backrent:
-      ${ word(yesno(assitance_backrent_no)) }
-  - Edit: assitance_terminated_no
-    button: |
-      Assitance terminated:
-      ${ word(yesno(assitance_terminated_no)) }
-  - Edit: assitance_terminated_yes
-    button: |
-      Assitance terminated:
-      ${ word(yesno(assitance_terminated_yes)) }
-  - Edit: assitance_backrent_explain
-    button: |
-      Assitance backrent explain:
-      ${ assitance_backrent_explain }
-  - Edit: owe_backrent_yes
-    button: |
-      Owe backrent:
-      ${ word(yesno(owe_backrent_yes)) }
-  - Edit: owe_backrent_no
-    button: |
-      Owe backrent:
-      ${ word(yesno(owe_backrent_no)) }
-  - Edit: previous_evicted_yes
-    button: |
-      Previous evicted:
-      ${ word(yesno(previous_evicted_yes)) }
-  - Edit: previous_evicted_no
-    button: |
-      Previous evicted:
-      ${ word(yesno(previous_evicted_no)) }
-  - Edit: explain_rental_history
-    button: |
-      Explain rental history:
-      ${ explain_rental_history }
-  - Edit: convicted_yes
-    button: |
-      Convicted:
-      ${ word(yesno(convicted_yes)) }
-  - Edit: pending_yes
-    button: |
-      Pending:
-      ${ word(yesno(pending_yes)) }
-  - Edit: convicted_no
-    button: |
-      Convicted:
-      ${ word(yesno(convicted_no)) }
-  - Edit: pending_no
-    button: |
-      Pending:
-      ${ word(yesno(pending_no)) }
-  - Edit: sex_offender_yes
-    button: |
-      Sex offender:
-      ${ word(yesno(sex_offender_yes)) }
-  - Edit: sex_offender_no
-    button: |
-      Sex offender:
-      ${ word(yesno(sex_offender_no)) }
-  - Edit: criminal_record_explination
-    button: |
-      Criminal record explination:
-      ${ criminal_record_explination }
-  - Edit: users[0]
-    button: |
-      users[0]:
-      ${ users[0] }
-  - Edit: users[0].address.address
-    button: |
-      users[0].address.address:
-      ${ users[0].address.address }
-  - Edit: users[0].address.unit
-    button: |
-      users[0].address.unit:
-      ${ users[0].address.unit }
-  - Edit: users[0].address.city
-    button: |
-      users[0].address.city:
-      ${ users[0].address.city }
-  - Edit: users[0].address.state
-    button: |
-      users[0].address.state:
-      ${ users[0].address.state }
-  - Edit: users[0].address.zip
-    button: |
-      users[0].address.zip:
-      ${ users[0].address.zip }
-  - Edit: users[0].phone_number
-    button: |
-      users[0].phone_number:
-      ${ users[0].phone_number }
-  - Edit: users[0].email
-    button: |
-      users[0].email:
-      ${ users[0].email }
-  - Edit: users[0].signature
-    button: |
-      users[0].signature:
-      ${ users[0].signature }
-  - Edit: signature_date
-    button: |
-      signature_date:
-      ${ signature_date }
+      - "user0_signature": ${ users[0].signature if i == 'final' else '' }
+      - "signature_date": ${ format_date(signature_date, format='MM/dd/yyyy') }
+      - "income1_type": ${ cash.item(0).type }
+      - "income2_type": ${ cash.item(1).type }
+      - "income3_type": ${ cash.item(2).type }
+      - "income4_type": ${ cash.item(3).type }
+      - "income5_type": ${ cash.item(4).type }
+      - "income6_type": ${ cash.item(5).type }
+      - "income7_type": ${ cash.item(6).type }
+      - "income8_type": ${ cash.item(7).type }
+      - "income9_type": ${ cash.item(8).type }
+      - "income10_type": ${ cash.item(9).type }
+
+
+
+      
