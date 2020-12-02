@@ -1,16 +1,17 @@
 ---
 modules: 
-- .customincome
+  - .customincome
 ---
 include:
   - docassemble.MAVirtualCourt:basic-questions.yml
   - docassemble.income:financial_statement.yml
 ---
 objects: 
-  - cash: IncomeList.using(there_is_another=True,complete_attribute='type')
+  - cash: IncomeList.using(there_is_another=False,complete_attribute='type')
 ---
 comment: |
   The metadata section controls the tab title and saved interview title. You can delete this section if you include this YAML file in another YAML file.
+
 metadata:
   title: |
     Massachusetts Rental Voucher Program
@@ -55,6 +56,7 @@ code: |
   nav.set_section('review_RentalVoucher')
   user_role = 'plaintiff'
   users.target_number = 8
+  cash.there_is_another = False
   users.there_is_another = False
   users[0].name.first
   users[0].address.address
@@ -84,12 +86,10 @@ code: |
   child_school_application
   if special_needs == True:
     special_needs_info
+  ### income 
   cash.gather()
   if cash.there_are_any: 
     review_cash
-  #if salary_wages: 
-  #  income.owner
-  household1_employer
   set_progress(25.0)
   ### assets
   assets.gather()
@@ -119,7 +119,7 @@ code: |
   pending_criminal
   convicted_crime
   if sex_offender or pending_criminal or convicted_crime: 
-    criminal_record_explanation
+    criminal_record_explination
   if (without_home or immediate_threat) and not_contributed_to_situation and reasonable_efforts and (displaced_resdidence or displaced_current):
     homelessness_displacement
   set_progress(50.0)
@@ -127,6 +127,7 @@ code: |
   users[2].address.address # emergency contact address
   users[2].mobile_number  # emergency contact contact
   user_math_logic
+  total_gross_income
   #set_parts(subtitle=str(users))
   #str(users[0])
   set_progress(58.33)
@@ -711,7 +712,7 @@ fields:
 ---
 id: homeless priority
 question: |
-  Check all that apply:
+  Check any and all that apply to you and your household
 fields:
   - 'I am without a place to live': without_home
     datatype: yesnowide
@@ -728,19 +729,20 @@ fields:
 ---
 id: meet homeless definition 
 question: | 
-  Based on your answers, you may want to apply for a Homeless Priority
+  Please select the category below that best describes **why you were displaced**.
 subquestion: |
-  If you think you meet the definition of homeless, please select the category below that best describes why you were displaced . Homelessness must be due to one of the categories below to qualify for Homeless Priority.
+  Based on your answers, you may meet the definition of homeless and may qualify for the priority. Homelessness must be due to one of the categories below to qualify. 
 fields: 
   - no label: homelessness_displacement
     input type: radio
     choices: 
-      - 'No-fault of applicant': displaced_no_fault
+      - 'No-fault of applicant like no-faul eviction': displaced_no_fault
       - 'Severe medical emergency': displaced_medical
       - 'Domestic violence': displaced_domestic_violence
-      - 'Natural forces': displaced_natural_forces
-      - 'Public action such as urban renewal or eminent domain': displaced_public_action_1
-      - 'Public action like condemnation of your home': displaced_public_action_2
+      - 'Natural forces like fire, flood, or earchquake': displaced_natural_forces
+      - 'Public action like urban renewal or eminent domain': displaced_public_action_1
+      - 'Public action like condemnation of your home': displaced_public_action_2 
+      - 'None of the above'
 ---
 id: local pref 1 
 question: |
@@ -846,11 +848,11 @@ fields:
 code: |
   cash.there_are_any = cash.cash_types.any_true()
 ---
-#code: |
-#  if cash.cash_types.any_true():
-#    for type in cash.cash_types.true_values():
-#      cash.appendObject(type=type)
-#  cash.add_cash = True
+code: |
+  if cash.cash_types.any_true():
+    for type in cash.cash_types.true_values():
+      cash.appendObject(type=type)
+  add_cash = True
 ---
 question: |
   Income from you and your household members
@@ -861,7 +863,7 @@ subquestion: |
   ${ cash.add_action() }
 field: review_cash
 ---
-id: income table
+id: cash table
 table: cash.table
 rows: cash
 columns:
@@ -873,32 +875,12 @@ columns:
       currency(row_item.gross)
   - Employer: |
       row_item.source  
----
-#id: ask income 
-#question: | 
-#  Check **all** types of income that **any member** recieves income from  the below
-#  
-#  
-#fields: 
-#  - no label: 
-#  - Salary, wages, including overtime and tips: salary_wages
-#    datatype: yesnowide
-#  - Income from Business or Profession: buisness_profession
-#    datatype: yesnowide
-#  - Unemployment or Disability Compensation: unemployment_disability
-#    datatype: yesnowide
-#  - TAFDC (Transitional Aid to Families with Dependent Children) or Public Assistance: tafdc_public_assistance
-#    datatype: yesnowide
-#  - Social Secuirty Benefits and SSI (Supplemental Secuirty Income), including SSP (State Supplement Program): social_security
-#    datatype: yesnowide
-#  - VA Disability Income: va_disability
-#    datatype: yesnowide
-#  - Pensions, Annuities, Dividends, and Interests: pensions_annuities
-#    datatype: yesnowide
+edit:
+  - gross 
 ---
 id: income 
 question: |
-  Provide the income before deduction
+  Describe the ${ordinal(i)} income before deduction for your household
 subquestion: |
   Estimate the gross income anticipated for all household members from all sources for the next 12 months
 fields:
@@ -914,7 +896,11 @@ fields:
         - showifdef('users[8].name')
     - 'Income type': cash[i].type
       code: |
-        cash_type_list() 
+        cash_type_list()
+    - 'Explain what type it is': cash[i].other_type
+      show if: 
+        variable: cash[i].type
+        is: 'Other'
     - 'Employer or Source of Income ': cash[i].source
       maxlength: 62
     - 'Gross Income for the next 12 months': cash[i].gross
@@ -922,36 +908,9 @@ fields:
       default: 0
       maxlength: 24
 ---
-id: gross income
-question: |
-  gross income
-subquestion: |
-  gross income for next 12 months
-  fix gross_income_1
-  add total calculation
-fields:
-  - 'household1_gross': household1_gross
-    maxlength: 24
-  - 'Household2 gross': household2_gross
-    maxlength: 24
-  - 'Household3 gross': household3_gross
-    maxlength: 24
-  - 'Household4 gross': household4_gross
-    maxlength: 24
-  - 'Household5 gross': household5_gross
-    maxlength: 24
-  - 'Household6 gross': household6_gross
-    maxlength: 24
-  - 'Household7 gross': household7_gross
-    maxlength: 24
-  - 'Household8 gross': household8_gross
-    maxlength: 24
-  - 'Household9 gross': household9_gross
-    maxlength: 24
-  - 'Household10 gross': household10_gross
-    maxlength: 24
-  - 'Total gross income': total_gross_income
-    maxlength: 13
+id: cash math 
+code: | 
+  total_gross_income = cash.item(0).gross + cash.item(1).gross + cash.item(2).gross + cash.item(3).gross + cash.item(4).gross + cash.item(5).gross + cash.item(6).gross + cash.item(7).gross + cash.item(8).gross + cash.item(9).gross 
 ---
 id: asset gather import
 question: |
@@ -1160,10 +1119,16 @@ field: convicted_crime
 buttons: 
   - "Yes": True
   - "No / No Record": False 
-help: No record 
-label: No record 
-content: |
-  An applicant for employment or for housing or an occupational or professional license with a sealed record on file with the commissioner of probation may answer 'no record' with respect to an inquiry herein relative to prior arrests, criminal court appearances or convictions.  An applicant for employment or for housing or an occupational or professional license with a sealed record on file with the commissioner of probation may answer 'no record' to an inquiry herein relative to prior arrests or criminal court appearances. In addition, any applicant for employment may answer 'no record' with respect to any inquiry relative to prior arrests, court appearances and adjudications in all cases of delinquency or as a child in need of services which did not result in a complaint transferred to the superior court for criminal prosecution.  An applicant for employment, housing or an occupational or professional license with a sealed record on file with the commissioner of probation may answer 'no record' with respect to an inquiry herein relative to prior arrests or criminal court appearances.
+help:
+  label: Can I answer no record? 
+  content: |
+    An applicant for housing may answer "no record":
+
+    * If you have a sealed record on file with the commissioner of probation  relative to prior arrests, criminal court appearances or convictions;
+    
+    * If you have with a sealed record on file with the commissioner of probation relative to prior arrests or criminal court appearances;
+    
+    * If you have a sealed record on file with the commissioner of probation  relative to prior arrests or criminal court appearances
 ---
 id: pending
 question: |
@@ -1172,10 +1137,16 @@ field: pending_criminal
 buttons: 
   - "Yes": True
   - "No / No Record": False 
-help: No record 
-label: No record 
-content: |
-  An applicant for employment or for housing or an occupational or professional license with a sealed record on file with the commissioner of probation may answer 'no record' with respect to an inquiry herein relative to prior arrests, criminal court appearances or convictions.  An applicant for employment or for housing or an occupational or professional license with a sealed record on file with the commissioner of probation may answer 'no record' to an inquiry herein relative to prior arrests or criminal court appearances. In addition, any applicant for employment may answer 'no record' with respect to any inquiry relative to prior arrests, court appearances and adjudications in all cases of delinquency or as a child in need of services which did not result in a complaint transferred to the superior court for criminal prosecution.  An applicant for employment, housing or an occupational or professional license with a sealed record on file with the commissioner of probation may answer 'no record' with respect to an inquiry herein relative to prior arrests or criminal court appearances.
+help:
+  label: Can I answer no record? 
+  content: |
+    An applicant for housing may answer "no record":
+
+    * If you have a sealed record on file with the commissioner of probation  relative to prior arrests, criminal court appearances or convictions;
+    
+    * If you have with a sealed record on file with the commissioner of probation relative to prior arrests or criminal court appearances;
+    
+    * If you have a sealed record on file with the commissioner of probation  relative to prior arrests or criminal court appearances
 ---
 id: registry
 question: |
@@ -1184,10 +1155,16 @@ field: sex_offender
 buttons: 
   - "Yes": True
   - "No / No Record": False 
-help: No record 
-label: No record 
-content: |
-  An applicant for employment or for housing or an occupational or professional license with a sealed record on file with the commissioner of probation may answer 'no record' with respect to an inquiry herein relative to prior arrests, criminal court appearances or convictions.  An applicant for employment or for housing or an occupational or professional license with a sealed record on file with the commissioner of probation may answer 'no record' to an inquiry herein relative to prior arrests or criminal court appearances. In addition, any applicant for employment may answer 'no record' with respect to any inquiry relative to prior arrests, court appearances and adjudications in all cases of delinquency or as a child in need of services which did not result in a complaint transferred to the superior court for criminal prosecution.  An applicant for employment, housing or an occupational or professional license with a sealed record on file with the commissioner of probation may answer 'no record' with respect to an inquiry herein relative to prior arrests or criminal court appearances.
+help:
+  label: Can I answer no record? 
+  content: |
+    An applicant for housing may answer "no record":
+
+    * If you have a sealed record on file with the commissioner of probation  relative to prior arrests, criminal court appearances or convictions;
+    
+    * If you have with a sealed record on file with the commissioner of probation relative to prior arrests or criminal court appearances;
+    
+    * If you have a sealed record on file with the commissioner of probation  relative to prior arrests or criminal court appearances
 ---
 id: criminal record explanation
 question: | 
@@ -1198,7 +1175,7 @@ subquestion: |
    - Do you or any member of your household have any criminal matters pending?[BR]
    - Do you or any member of your household have a lifetime requirement to register as a sex offender in the state of Massachusetts?
 fields: 
-  - 'no label': criminal_record_explanation
+  - 'no label': criminal_record_explination
     maxlength: 154
     input type: area
     rows: 2
@@ -1448,37 +1425,37 @@ attachment:
       - "emergency_mobile": ${ users[2].mobile_number }
       - "emergency_phone": ${ users[2].phone_number }
       - "emergency_email": ${ users[2].email  }
-      - "household1_gross": ${ household1_gross }
-      - "household1_name__2": ${ household1_name }
-      - "household1_employer": ${ household1_employer }
-      - "household2_gross": ${ household2_gross }
-      - "household2_name__2": ${ household2_name }
-      - "household2_employer": ${ household2_employer }
-      - "household3_gross": ${ household3_gross }
-      - "household3_name__2": ${ household3_name }
-      - "household3_employer": ${ household3_employer }
-      - "household4_gross": ${ household4_gross }
-      - "household4_name__2": ${ household4_name }
-      - "household4_empoloyer": ${ household4_empoloyer }
-      - "household5_gross": ${ household5_gross }
-      - "household5_name__2": ${ household5_name }
-      - "household5_empoloyer": ${ household5_empoloyer }
-      - "household6_gross": ${ household6_gross }
-      - "household6_name__2": ${ household6_name }
-      - "household6_employer": ${ household6_employer }
-      - "household7_gross": ${ household7_gross }
-      - "household7_name__2": ${ household7_name }
-      - "household7_employer": ${ household7_employer }
-      - "household8_gross": ${ household8_gross }
-      - "household8_name__2": ${ household8_name }
-      - "household8_empoloyer": ${ household8_empoloyer }
-      - "household9_gross": ${ household9_gross }
-      - "household9_name__2": ${ household9_name }
-      - "household9_employer": ${ household9_employer }
-      - "household10_gross": ${ household10_gross }
-      - "household10_name__2": ${ household10_name }
-      - "household10_employer": ${ household10_employer }
-      - "total_gross_income": ${ total_gross_income }
+      - "household1_gross": ${ cash.item(0).gross }
+      - "household1_employed": ${ cash[0].earner }
+      - "household1_employer": ${ cash.item(0).source }
+      - "household2_gross": ${ cash.item(1).gross }
+      - "household2_employed": ${ cash[1].earner }
+      - "household2_employer": ${ cash.item(1).source }
+      - "household3_gross": ${ cash.item(2).gross }
+      - "household3_employed": ${ cash[2].earner }
+      - "household3_employer": ${ cash.item(2).source }
+      - "household4_gross": ${ cash.item(3).gross }
+      - "household4_employed": ${ cash[3].earner }
+      - "household4_employer": ${ cash.item(3).source }
+      - "household5_gross": ${ cash.item(4).gross }
+      - "household5_employed": ${ cash[4].earner }
+      - "household5_employer": ${ cash.item(4).source }
+      - "household6_gross": ${ cash.item(5).gross }
+      - "household6_employed": ${ cash[5].earner }
+      - "household6_employer": ${ cash.item(5).source }
+      - "household7_gross": ${ cash.item(6).gross }
+      - "household7_employed": ${ cash[6].earner }
+      - "household7_employer": ${ cash.item(6).source }
+      - "household8_gross": ${ cash.item(7).gross }
+      - "household8_employed": ${ cash[7].earner }
+      - "household8_employer": ${ cash.item(7).source }
+      - "household9_gross": ${ cash.item(8).gross }
+      - "household9_employed": ${ cash[8].earner }
+      - "household9_employer": ${ cash.item(8).source }
+      - "household10_gross": ${ cash.item(9).gross }
+      - "household10_employed": ${ cash[9].earner }
+      - "household10_employer": ${ cash.item(9).source }
+      - "total_gross_income": ${ currency(total_gross_income) }
       - "asset_1": ${ assets.item(0).type }
       - "asset_value_1": ${ assets.item(0).balance  }
       - "financial_institution_1": ${ assets.item(0).institution }
@@ -1542,6 +1519,17 @@ attachment:
       - "criminal_record_explination": ${ criminal_record_explination }
       - "user0_signature": ${ users[0].signature if i == 'final' else '' }
       - "signature_date": ${ format_date(signature_date, format='MM/dd/yyyy') }
+      - "income1_type": ${ cash.item(0).type }
+      - "income2_type": ${ cash.item(1).type }
+      - "income3_type": ${ cash.item(2).type }
+      - "income4_type": ${ cash.item(3).type }
+      - "income5_type": ${ cash.item(4).type }
+      - "income6_type": ${ cash.item(5).type }
+      - "income7_type": ${ cash.item(6).type }
+      - "income8_type": ${ cash.item(7).type }
+      - "income9_type": ${ cash.item(8).type }
+      - "income10_type": ${ cash.item(9).type }
+
 
 
       
