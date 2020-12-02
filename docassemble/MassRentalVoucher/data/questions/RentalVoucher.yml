@@ -58,12 +58,14 @@ code: |
   users.target_number = 8
   cash.there_is_another = False
   users.there_is_another = False
+  house_count
+  same_person_question
   users[0].name.first
   users[0].address.address
   users[0].phone_number
-  house_count
+  set_head_household_logic
   set_progress(8.33)
-  users[1].name.first # head of household
+  users[1].name.first # head of household if not the same
   household1_birthdate # head of household 
   if house_count >= 2:
     users[3].name.first and household2_relationship  
@@ -87,15 +89,15 @@ code: |
   if special_needs == True:
     special_needs_info
   ### income 
-  cash.gather()
   if cash.there_are_any: 
     review_cash
+  cash.gather()
   set_progress(25.0)
   ### assets
-  assets.gather()
   assets.add_assets
   if assets.there_are_any:
     review_assets
+  assets.gather()
   if own_property == True:
     real_estate_address
   set_progress(33.33)
@@ -139,7 +141,6 @@ code: |
   users[0].signature
   RentalVoucher = True
 ---
-
 comment: |
   This question is used to introduce your interview. Please customize
 id: Massachusetts Rental Voucher Program
@@ -147,7 +148,62 @@ continue button field: RentalVoucher_intro
 question: |
   Massachusetts Rental Voucher Program
 subquestion: |
+  This interview will help you complete an application for the Massachusetts Rental Voucher Program. 
+  
   The Massachusetts Rental Voucher Program (MRVP), provides a permanent improvement in the lives of low-income families and individuals by offering rental subsidies to those eligible for the program.
+  
+  Contact the local housing agency in the area in which you wish to reside to check the status of the agency’s waiting list, open or closed. Applications may be made where waiting lists are open. Not all agencies administer both the Mobile and Project Based programs. Please use the [Service Locator](https://hedfuel.azurewebsites.net/) to find the Local Housing Authority Closest to you.
+---
+id: basic questions intro screen
+question: |
+  Massachusetts Rental Voucher Program: Mass Access Project
+subquestion: |
+
+  The MassAccess Project can help **Massachusetts residents** complete and download forms in 3 steps:
+  
+  Step 1. Answer questions that will fill in your form for you.  
+  Step 2. Preview the completed form.  
+  Step 3. Download and print the final form. You will need to deliver it
+  to the court on your own.
+
+  If you do not live in Massachusetts, you may be able to get help for your 
+  legal problem from [your local legal aid 
+  provider](https://www.lsc.gov/what-legal-aid/find-legal-aid).
+  
+  Tap the {green words} in any screen for a definition or more information.
+  
+  If you have questions about this form or the court process, 
+  call the Trial Court’s Emergency HelpLine:  
+  833-91-COURT (833-912-6878)  
+  Monday-Friday  
+  8:30am - 4:30pm
+
+  % if chat_partners_available().help:
+  Live help is currently available in this interview. Click the speech bubble
+  (:comment-alt:) in the navigation bar to connect to a live advocate for help.
+  % endif
+
+fields:
+  - To continue, you must accept the [terms of use](https://massaccess.suffolklitlab.org/privacy/): acknowledged_information_use
+    datatype: checkboxes
+    none of the above: False    
+    minlength: 1
+    choices:
+      - I accept the terms of use.
+    validation messages:
+      minlength: |
+        You cannot continue unless you agree to the terms of use.        
+continue button field: basic_questions_intro_screen
+terms:
+  green words: |
+    Green words are legal terms or a short way of referring to something that needs more explanation. The definition or explanation pops up when you tap the green words.
+right: |
+  % if user_has_saved_answers:
+  ${fa_icon("bell", color="primary", size="sm")}
+  Saved answers available! 
+  
+  ${action_button_html(url_action('load_answer'), icon="folder-open", label=word("View answers"), size="sm" )}
+  % endif  
 ---
 id: Review your form before you sign it
 continue button field: RentalVoucher_preview_question
@@ -160,19 +216,26 @@ subquestion: |
 ---
 id: household count
 question: | 
-  How many people are in your household?
+  How many people will live in the home?
 fields: 
   - People in household: house_count
     datatype: integer
     min: 1
     max: 7 
+  - note: |
+      This interview is set to handle a maximum of 7 individuals 
 validation code: |
   if house_count < 2 and house_count > 7:
     validation_error("This interview is set up to handle a maximum household size of 7 individuals")
+
 ---
 id: name of applicant
 question: |
-  Who is the name of the person filling out the application? 
+  % if same_person_question:
+  What is your name?
+  % else: 
+  What is the name of the person filling out the application? 
+  % endif
 fields:
   - First Name: users[0].name.first
   - Middle Name: users[0].name.middle
@@ -188,7 +251,7 @@ question: |
   What is your head of household's name? 
 fields:
   - First Name: users[1].name.first
-  - Middle Name: users[1].name.middl
+  - Middle Name: users[1].name.middle
     required: False
   - Last Name: users[1].name.last
   - Suffix: users[1].name.suffix
@@ -200,6 +263,21 @@ help:
   heading: What is a head of household? 
   content: |
     Head of Household – the adult member of the family who is considered to be the head of household for purposes of determining income eligibility and rent. The head of household is responsible for ensuring that the family fulfills all of its responsibilities under MRVP. The family may designate any qualified family member as the head of household. The head of household must have the legal capacity to enter into a lease under state and local law. If the head of household is a student, he or she shall not be considered a full-time student pursuant to the definition above for purposes of calculating exclusions from household income under 760 CMR 49.05. 
+---
+id: is user head of household 
+question: 
+  Are you the head of the household? 
+fields: 
+  - no label: same_person_question
+    datatype: yesnoradio
+---
+id: head of household = user 
+code: | 
+  if same_person_question: 
+    users[1].name = users[0].name.copy_deep("users[1].name")
+  else: 
+     users[1].name.first
+  set_head_household_logic = True 
 ---
 id: maths 1
 code: |
@@ -397,10 +475,6 @@ fields:
     datatype: birthdate
     maxlength: 14
   - 'Sex': household1_sex
-    choices: 
-      - Male: Male
-      - Female: Female
-      - Prefer not to say: Prefer not to say
     maxlength: 7
   - 'Social Security Number': household1_ssn
     hint: e.g. 123-45-6789
@@ -410,10 +484,12 @@ fields:
     help: |
       Responding to this question is **optional**. Your status with respect to tenant selection procedures will not be affected by this information.
     choices: 
-      - American Indian or Alaska Native: American Indian or Alaska Native
+      - American Indian: American Indian  
+      - Alaska Native: Alaska Native
       - Asian: Asian
       - Black or African American: Black or African American
-      - Native Hawaiian or Other Pacific Islander: Native Hawaiian Other Pacific Islander
+      - Native Hawaiian : Native Hawaiian
+      - Other Pacific Islander: Native Hawaiian Other Pacific Islander
       - White: White
       - Other (specify): Other
     required: False
@@ -441,10 +517,6 @@ fields:
     datatype: birthdate
     maxlength: 14
   - 'Sex': household2_sex
-    choices: 
-      - Male: Male
-      - Female: Female
-      - Prefer not to say: Prefer not to say
     maxlength: 7
   - 'Social Security Number': household2_ssn
     hint: e.g. 123-45-6789
@@ -454,10 +526,12 @@ fields:
     help: |
       Responding to this question is **optional**. Your status with respect to tenant selection procedures will not be affected by this information.
     choices: 
-      - American Indian or Alaska Native: American Indian or Alaska Native
+      - American Indian: American Indian  
+      - Alaska Native: Alaska Native
       - Asian: Asian
       - Black or African American: Black or African American
-      - Native Hawaiian or Other Pacific Islander: Native Hawaiian Other Pacific Islander
+      - Native Hawaiian : Native Hawaiian
+      - Other Pacific Islander: Native Hawaiian Other Pacific Islander
       - White: White
       - Other (specify): Other
     required: False
@@ -485,10 +559,6 @@ fields:
     datatype: birthdate
     maxlength: 14
   - 'Sex': household3_sex
-    choices: 
-      - Male: Male
-      - Female: Female
-      - Prefer not to say: Prefer not to say
     maxlength: 7
   - 'Social Security Number': household3_ssn
     hint: e.g. 123-45-6789
@@ -498,10 +568,12 @@ fields:
     help: |
       Responding to this question is **optional**. Your status with respect to tenant selection procedures will not be affected by this information.
     choices: 
-      - American Indian or Alaska Native: American Indian or Alaska Native
+      - American Indian: American Indian  
+      - Alaska Native: Alaska Native
       - Asian: Asian
       - Black or African American: Black or African American
-      - Native Hawaiian or Other Pacific Islander: Native Hawaiian Other Pacific Islander
+      - Native Hawaiian : Native Hawaiian
+      - Other Pacific Islander: Native Hawaiian Other Pacific Islander
       - White: White
       - Other (specify): Other
     required: False
@@ -528,10 +600,6 @@ fields:
     datatype: birthdate
     maxlength: 14
   - 'Sex': household4_sex
-    choices: 
-      - Male: Male
-      - Female: Female
-      - Prefer not to say: Prefer not to say
     maxlength: 7
   - 'Social Security Number': household4_ssn
     hint: e.g. 123-45-6789
@@ -541,10 +609,12 @@ fields:
     help: |
       Responding to this question is **optional**. Your status with respect to tenant selection procedures will NOT be affected by this information.
     choices: 
-      - American Indian or Alaska Native: American Indian or Alaska Native
+      - American Indian: American Indian  
+      - Alaska Native: Alaska Native
       - Asian: Asian
       - Black or African American: Black or African American
-      - Native Hawaiian or Other Pacific Islander: Native Hawaiian Other Pacific Islander
+      - Native Hawaiian : Native Hawaiian
+      - Other Pacific Islander: Native Hawaiian Other Pacific Islander
       - White: White
       - Other (specify): Other
     required: False
@@ -571,10 +641,6 @@ fields:
     datatype: birthdate
     maxlength: 14
   - 'Sex': household5_sex
-    choices: 
-      - Male: Male
-      - Female: Female
-      - Prefer not to say: Prefer not to say
     maxlength: 7
   - 'Social Security Number': household5_ssn
     hint: 123-45-6789
@@ -584,10 +650,12 @@ fields:
     help: |
       Responding to this question is **optional**. Your status with respect to tenant selection procedures will NOT be affected by this information.
     choices: 
-      - American Indian or Alaska Native: American Indian or Alaska Native
+      - American Indian: American Indian  
+      - Alaska Native: Alaska Native
       - Asian: Asian
       - Black or African American: Black or African American
-      - Native Hawaiian or Other Pacific Islander: Native Hawaiian Other Pacific Islander
+      - Native Hawaiian : Native Hawaiian
+      - Other Pacific Islander: Native Hawaiian Other Pacific Islander
       - White: White
       - Other (specify): Other
     required: False
@@ -614,10 +682,6 @@ fields:
     datatype: birthdate
     maxlength: 14
   - 'Sex': household6_sex
-    choices: 
-      - Male: Male
-      - Female: Female
-      - Prefer not to say: Prefer not to say
     maxlength: 7
   - 'Social Security Number': household6_ssn
     hint: 123-45-6789
@@ -627,10 +691,12 @@ fields:
     help: |
       Responding to this question is **optional**. Your status with respect to tenant selection procedures will NOT be affected by this information.
     choices: 
-      - American Indian or Alaska Native: American Indian or Alaska Native
+      - American Indian: American Indian  
+      - Alaska Native: Alaska Native
       - Asian: Asian
       - Black or African American: Black or African American
-      - Native Hawaiian or Other Pacific Islander: Native Hawaiian Other Pacific Islander
+      - Native Hawaiian : Native Hawaiian
+      - Other Pacific Islander: Native Hawaiian Other Pacific Islander
       - White: White
       - Other (specify): Other
     required: False
@@ -657,11 +723,6 @@ fields:
     datatype: birthdate
     maxlength: 14
   - 'Sex': household7_sex
-    choices: 
-      - Male: Male
-      - Female: Female
-      - Other: Other
-      - Prefer not to say: Prefer not to say 
     maxlength: 7
   - 'Social Security Number': household7_ssn
     hint: e.g. 123-45-6789
@@ -671,10 +732,12 @@ fields:
     help: |
       Responding to this question is **optional**. Your status with respect to tenant selection procedures will NOT be affected by this information.
     choices: 
-      - American Indian or Alaska Native: American Indian or Alaska Native
+      - American Indian: American Indian  
+      - Alaska Native: Alaska Native
       - Asian: Asian
       - Black or African American: Black or African American
-      - Native Hawaiian or Other Pacific Islander: Native Hawaiian Other Pacific Islander
+      - Native Hawaiian : Native Hawaiian
+      - Other Pacific Islander: Native Hawaiian Other Pacific Islander
       - White: White
       - Other (specify): Other
     required: False
@@ -726,6 +789,9 @@ fields:
     datatype: yesnowide
   - 'I am about to be displaced from my primary residence': displaced_resdidence
     datatype: yesnowide
+  - 'None of the above' : skip_question
+    datatype: yesnowide
+    uncheck others: True
 ---
 id: meet homeless definition 
 question: | 
@@ -746,17 +812,23 @@ fields:
 ---
 id: local pref 1 
 question: |
-  Do you currently reside in the same city or town that the Local Housing Authority to which you are applying is located in
+  Do you currently **live** in the same city or town that the Local Housing Authority you are applying is located in?
+subquestion: | 
+  You can use the [Service Locator](https://hedfuel.azurewebsites.net/) to find the Local Housing Authority closest to you.
 yesno: reside_application
 ---
 id: local pref 2 
 question: |
-  Do you currently work in the same city or town that the Local Housing Authority to which you are applying is located in?
+  Do you currently **work** in the same city or town that the Local Housing Authority you are applying is located in?
+subquestion: | 
+  You can use the [Service Locator](https://hedfuel.azurewebsites.net/) to find the Local Housing Authority closest to you.
 yesno: work_application
 ---
 id: local pref 3
 question: | 
-  Do you currently have a child who attends school in the same city or town that the Local Housing Authority to which you are applying is located in?
+  Do you currently **have a child who attends school** in the same city or town that the Local Housing Authority you are applying is located in?
+subquestion: | 
+  You can use the [Service Locator](https://hedfuel.azurewebsites.net/) to find the Local Housing Authority closest to you.
 yesno: child_school_application
 ---
 id: special needs
@@ -827,16 +899,11 @@ validation code: |
   if (not showifdef('users[2].phone_number') and \
       (not showifdef('users[2].mobile_number')) and \
       (not showifdef('users[2].email'))):
-    validation_error(word("You need to provide at least one contact method."))
-help: |
-  The court **must** be able to reach you. So you have to give them some way to do this.
-  
-  Some forms allow you to tell the court you need to keep your address, phone,
-  and email confidential, so that only court staff can see this information.    
+    validation_error(word("You need to provide at least one contact method."))  
 ---
 id: income type checks 
 question: |
-  Do you, your spouse, or someone in your household own any of the following?
+  Does anyone in your household have income from any of the following?
 subquestion: |
   Include **all** bank accounts, stocks and bond, trusts, real estate, etc. **Do not** include clothing, furniture, or cars. 
 fields:
@@ -848,11 +915,11 @@ fields:
 code: |
   cash.there_are_any = cash.cash_types.any_true()
 ---
-code: |
-  if cash.cash_types.any_true():
-    for type in cash.cash_types.true_values():
-      cash.appendObject(type=type)
-  add_cash = True
+#code: |
+#  if cash.cash_types.any_true():
+#    for type in cash.cash_types.true_values():
+#      cash.appendObject(type=type)
+#  add_cash = True
 ---
 question: |
   Income from you and your household members
@@ -878,12 +945,19 @@ columns:
 edit:
   - gross 
 ---
-id: income 
+id: income description
 question: |
   Describe the ${ordinal(i)} income before deduction for your household
 subquestion: |
   Estimate the gross income anticipated for all household members from all sources for the next 12 months
 fields:
+    - 'Income type': cash[i].type
+      code: |
+        cash_type_list()
+    - 'Explain what type it is': cash[i].other_type
+      show if: 
+        variable: cash[i].type
+        is: 'Other'
     - 'Household member income': cash[i].earner
       datatype: object_radio
       choices:
@@ -894,13 +968,7 @@ fields:
         - showifdef('users[6].name')
         - showifdef('users[7].name')
         - showifdef('users[8].name')
-    - 'Income type': cash[i].type
-      code: |
-        cash_type_list()
-    - 'Explain what type it is': cash[i].other_type
-      show if: 
-        variable: cash[i].type
-        is: 'Other'
+
     - 'Employer or Source of Income ': cash[i].source
       maxlength: 62
     - 'Gross Income for the next 12 months': cash[i].gross
@@ -1170,10 +1238,10 @@ id: criminal record explanation
 question: | 
   You answered **yes** to at least one question regarding a criminal record for you or a member of your household. [BR] Provide an explination. 
 subquestion: | 
-  The questions were: [BR]
-  - Have you or any member of your household ever been convicted of a drug or violent crime?[BR]
-   - Do you or any member of your household have any criminal matters pending?[BR]
-   - Do you or any member of your household have a lifetime requirement to register as a sex offender in the state of Massachusetts?
+  The questions were:
+  * Have you or any member of your household ever been convicted of a drug or violent crime?
+  * Do you or any member of your household have any criminal matters pending?
+  * Do you or any member of your household have a lifetime requirement to register as a sex offender in the state of Massachusetts?
 fields: 
   - 'no label': criminal_record_explination
     maxlength: 154
@@ -1522,16 +1590,66 @@ attachment:
       - "criminal_record_explination": ${ criminal_record_explination }
       - "user0_signature": ${ users[0].signature if i == 'final' else '' }
       - "signature_date": ${ format_date(signature_date, format='MM/dd/yyyy') }
-      - "income1_type": ${ cash.item(0).type }
-      - "income2_type": ${ cash.item(1).type }
-      - "income3_type": ${ cash.item(2).type }
-      - "income4_type": ${ cash.item(3).type }
-      - "income5_type": ${ cash.item(4).type }
-      - "income6_type": ${ cash.item(5).type }
-      - "income7_type": ${ cash.item(6).type }
-      - "income8_type": ${ cash.item(7).type }
-      - "income9_type": ${ cash.item(8).type }
-      - "income10_type": ${ cash.item(9).type }
+      - "income1_type": |
+          % if cash[0].type == 'Other': 
+          ${ cash.item(0).other_type }
+          % else: 
+          ${ cash.item(0).type }
+          % endif 
+      - "income2_type": |
+          % if cash[1].type == 'Other': 
+          ${ cash.item(1).other_type }
+          % else: 
+          ${ cash.item(1).type }
+          % endif 
+      - "income3_type": |
+          % if cash[2].type == 'Other': 
+          ${ cash.item(2).other_type }
+          % else: 
+          ${ cash.item(2).type }
+          % endif 
+      - "income4_type": |
+          % if cash[3].type == 'Other': 
+          ${ cash.item(3).other_type }
+          % else: 
+          ${ cash.item(3).type }
+          % endif 
+      - "income5_type": |
+          % if cash[4].type == 'Other': 
+          ${ cash.item(4).other_type }
+          % else: 
+          ${ cash.item(4).type }
+          % endif 
+      - "income6_type": |
+          % if cash[5].type == 'Other': 
+          ${ cash.item(5).other_type }
+          % else: 
+          ${ cash.item(5).type }
+          % endif 
+      - "income7_type": |
+          % if cash[6].type == 'Other': 
+          ${ cash.item(6).other_type }
+          % else: 
+          ${ cash.item(6).type }
+          % endif 
+      - "income8_type": |
+          % if cash[7].type == 'Other': 
+          ${ cash.item(7).other_type }
+          % else: 
+          ${ cash.item(7).type }
+          % endif 
+      - "income9_type": |
+          % if cash[8].type == 'Other': 
+          ${ cash.item(8).other_type }
+          % else: 
+          ${ cash.item(8).type }
+          % endif 
+      - "income10_type": |
+          % if cash[9].type == 'Other': 
+          ${ cash.item(9).other_type }
+          % else: 
+          ${ cash.item(9).type } 
+          % endif
 
 
 

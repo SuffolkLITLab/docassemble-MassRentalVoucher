@@ -16,7 +16,7 @@ def cash_type_list() :
         ('Income from Business or Profession', 'Net income from Business or Profession'),
         ('Unemployment or Disability Compensation', 'Unemployment or Disability Compensation'),
         ('TAFDC  or Public Assistance', 'TAFDC or Public Assistance'),
-        ('Social Secuirty Benefits and SSI (Supplemental Secuirty Income), including SSP (State Supplement Program)', 'Social Secuirty Benefits and SSI, including SSP (State Supplement Program)'),
+        ('Social Secuirty Benefits and SSI (Supplemental Secuirty Income), including SSP (State Supplement Program)', 'Social Secuirty Benefits and SSI, including SSP'),
         ('VA Disability Income', 'VA Disability Income'),
         ('Pensions, Annuities, Dividends, and Interests', 'Pensions, Annuities, Dividends, and Interests'),
         ('Other', 'Other Income:')
