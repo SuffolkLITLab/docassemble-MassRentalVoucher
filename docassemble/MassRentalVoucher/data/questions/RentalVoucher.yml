@@ -123,7 +123,7 @@ code: |
   if (without_home or immediate_threat) and not_contributed_to_situation and reasonable_efforts and (displaced_resdidence or displaced_current):
     homelessness_displacement
   set_progress(50.0)
-  users[2].name.first # emergency contact name 
+  users[2].name.first #emergency contact name 
   users[2].address.address # emergency contact address
   users[2].mobile_number  # emergency contact contact
   user_math_logic
