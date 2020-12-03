@@ -1661,7 +1661,7 @@ attachment:
       - "previous_evicted_yes": ${ previous_evicted }
       - "previous_evicted_no": ${ not previous_evicted }
       - "explain_rental_history": | 
-          % if not owe_backrent and not previous_evicted : 
+          % if not owe_backrent and not previous_evicted: 
           ${ 'N/A' } 
           % else: 
           ${ explain_rental_history }
@@ -1673,7 +1673,7 @@ attachment:
       - "sex_offender_yes": ${ sex_offender }
       - "sex_offender_no": ${ not sex_offender }
       - "criminal_record_explination": | 
-          % if not sex_offender and not pending_criminal and not convicted_crime : 
+          % if not sex_offender and not pending_criminal and not convicted_crime :
           ${ 'N/A' } 
           % else: 
           ${ criminal_record_explination }
