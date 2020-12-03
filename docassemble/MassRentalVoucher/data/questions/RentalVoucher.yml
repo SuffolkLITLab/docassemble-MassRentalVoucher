@@ -985,7 +985,7 @@ code: |
 ---
 id: asset gather import
 question: |
-  Do you, your spouse, or someone in your household own any of the following?
+  Does anyone in your household own any of the following?
 subquestion: |
   Include **all** bank accounts, stocks and bond, trusts, real estate, etc. **Do not** include clothing, furniture, or cars. 
 fields:
@@ -1123,7 +1123,7 @@ fields:
 ---
 id: housing assistance
 question: |
-  Have you, or any member of your household, ever received housing assitance from MRVP or any other housing agency?
+  Has anyone in your household ever received housing assitance from MRVP or any other housing agency?
 yesno: housing_assistance_previous
 ---
 id: previous agency
