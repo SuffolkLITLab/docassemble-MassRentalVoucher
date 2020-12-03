@@ -110,10 +110,8 @@ code: |
     if moveout_date_unknown: 
       housing_assistance_moveout_guess
     moveout_reason
-    assitance_terminated
-    assitance_backrent
-  if assitance_terminated or assitance_backrent: 
-    assitance_backrent_explain
+    if assitance_terminated or assitance_backrent: 
+      assitance_backrent_explain
   if owe_backrent or previous_evicted: 
     explain_rental_history
   set_progress(41.67)
@@ -987,7 +985,7 @@ code: |
 ---
 id: asset gather import
 question: |
-  Do you, your spouse, or someone in your household own any of the following?
+  Does anyone in your household own any of the following?
 subquestion: |
   Include **all** bank accounts, stocks and bond, trusts, real estate, etc. **Do not** include clothing, furniture, or cars. 
 fields:
@@ -1125,7 +1123,7 @@ fields:
 ---
 id: housing assistance
 question: |
-  Have you, or any member of your household, ever received housing assitance from MRVP or any other housing agency?
+  Has anyone in your household ever received housing assitance from MRVP or any other housing agency?
 yesno: housing_assistance_previous
 ---
 id: previous agency
