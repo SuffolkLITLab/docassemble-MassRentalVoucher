@@ -18,6 +18,9 @@ metadata:
   short title: |
     Massachusetts Rental Voucher Program
 ---
+code: |
+  interview_short_title = "Apply for the Massachusetts Rental Voucher Program"    
+---
 comment: |
   This section is used by MAVirtualCourts to control how some of the questions work.
 mandatory: True
