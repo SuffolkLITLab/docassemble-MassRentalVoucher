@@ -763,7 +763,9 @@ fields:
 id: spoken and written language
 question: |
   Do you understand spoken or written English?
-yesno: understand_english
+fields:
+  - no label: understand_english
+    datatype: yesnoradio
 ---
 id: primary spoken language
 question: |
@@ -821,26 +823,34 @@ question: |
   Do you currently **live** in the same city or town that the Local Housing Authority you are applying is located in?
 subquestion: | 
   You can use the [Service Locator](https://hedfuel.azurewebsites.net/) to find the Local Housing Authority closest to you.
-yesno: reside_application
+fields:
+  - no label: reside_application
+    datatype: yesnoradio
 ---
 id: local pref 2 
 question: |
   Do you currently **work** in the same city or town that the Local Housing Authority you are applying is located in?
 subquestion: | 
   You can use the [Service Locator](https://hedfuel.azurewebsites.net/) to find the Local Housing Authority closest to you.
-yesno: work_application
+fields:
+  - no label: work_application
+    datatype: yesnoradio
 ---
 id: local pref 3
 question: | 
   Do you currently **have a child who attends school** in the same city or town that the Local Housing Authority you are applying is located in?
 subquestion: | 
   You can use the [Service Locator](https://hedfuel.azurewebsites.net/) to find the Local Housing Authority closest to you.
-yesno: child_school_application
+fields:
+  - no label: child_school_application
+    datatype: yesnoradio
 ---
 id: special needs
 question: |
   Do you have any special needs due to a disability or need a reasonable accommodation?
-yesno: special_needs
+fields:
+  - no label: special_needs
+    datatype: yesnoradio
 ---
 id: specify special ed info 
 question: |
@@ -927,6 +937,7 @@ code: |
 #      cash.appendObject(type=type)
 #  add_cash = True
 ---
+id: "income from you and your household members"
 question: |
   Income from you and your household members
 subquestion: |
@@ -1041,7 +1052,7 @@ subquestion: |
   ${ assets.add_action() }
 field: review_assets
 ---
-id: assets
+id: "assets 2"
 table: assets.table
 rows: assets
 columns:
@@ -1061,9 +1072,11 @@ edit:
 id: own prop
 question: |
   Do you own any real estate?
-yesno: own_property
+fields:
+  - no label: own_property
+    datatype: yesnoradio
 --- 
-id: own prop
+id: "own prop 2"
 question: |
   Provide the address of the real estate you own
 fields: 
@@ -1074,7 +1087,9 @@ fields:
 id: sold property
 question: |
   Have you sold, transfered or given away any real property or assets in the last three years?
-yesno: sold_property
+fields:
+  - no label: sold_property
+    datatype: yesnoradio
 ---
 id: sale property details
 question: | 
@@ -1127,7 +1142,9 @@ fields:
 id: housing assistance
 question: |
   Has anyone in your household ever received housing assitance from MRVP or any other housing agency?
-yesno: housing_assistance_previous
+fields:
+  - no label: housing_assistance_previous
+    datatype: yesnoradio
 ---
 id: previous agency
 question: |
@@ -1162,12 +1179,16 @@ fields:
 id: terminated for cause 
 question: |
   Were you or any member of your household receiving assistance at the housing agency terminated for cause? 
-yesno: assitance_terminated 
+fields:
+  - no label: assitance_terminated
+    datatype: yesnoradio
 --- 
 id: backrent 
 question: | 
   Do you owe any money, back rent or damages to the housing agency? 
-yesno: assitance_backrent
+fields:
+  - no label: assitance_backrent
+    datatype: yesnoradio
 ---
 id: explain termiated 
 question: |
@@ -1258,12 +1279,16 @@ fields:
 id: rental history 1
 question: |
   Do you owe any previous property owner money for damagers or unpaid rent? 
-yesno: owe_backrent
+fields:
+  - no label: owe_backrent
+    datatype: yesnoradio
 --- 
 id: rental history 2 
 question: | 
   Have you ever been evicted from a rental unit for cause? 
-yesno: previous_evicted 
+fields:
+  - no label: previous_evicted
+    datatype: yesnoradio
 ---
 id: explain rental history
 question: | 
@@ -1292,6 +1317,7 @@ fields:
   - Zip: users[0].address.zip
     required: False
 ---
+id: "what is your contact information"
 question: |
   What is your contact information?
 subquestion: |
