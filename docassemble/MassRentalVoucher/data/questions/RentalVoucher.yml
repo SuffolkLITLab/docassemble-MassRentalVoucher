@@ -17,6 +17,7 @@ metadata:
     Massachusetts Rental Voucher Program
   short title: |
     Massachusetts Rental Voucher Program
+  original form: ["https://www.mass.gov/how-to/apply-for-the-massachusetts-rental-voucher-program-mrvp"]
 ---
 code: |
   interview_short_title = "Apply for the Massachusetts Rental Voucher Program"    
@@ -32,7 +33,7 @@ code: |
     'title': 'Massachusetts Rental Voucher Program',
     'short title': 'Massachusetts Rental Voucher Program',
     'description': 'The Massachusetts Rental Voucher Program (MRVP), provides a permanent improvement in the lives of low-income families and individuals by offering rental subsidies to those eligible for the program.',
-    'original_form': 'https://www.mass.gov/doc/mrvp-application-form-english/download',
+    'original_form': 'https://www.mass.gov/how-to/apply-for-the-massachusetts-rental-voucher-program-mrvp',
     'allowed courts': [
     ],
     'categories': [
@@ -1278,7 +1279,7 @@ fields:
 ---
 id: rental history 1
 question: |
-  Do you owe any previous property owner money for damagers or unpaid rent? 
+  Do you owe any previous property owner money for damages or unpaid rent? 
 fields:
   - no label: owe_backrent
     datatype: yesnoradio
@@ -1292,7 +1293,7 @@ fields:
 ---
 id: explain rental history
 question: | 
-  If you owe any previous property owner money for damagers or unpaid rent or were evicted from a rental unit for cause, explain below.
+  If you owe any previous property owner money for damages or unpaid rent or were evicted from a rental unit for cause, explain below.
 fields: 
   - 'Explain rental history': explain_rental_history
     input type: area
